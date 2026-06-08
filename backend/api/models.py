@@ -1,0 +1,247 @@
+from datetime import date, datetime
+from decimal import Decimal
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class HealthResponse(BaseModel):
+    status: str
+    database: str
+
+
+class GmailConnectionUpsertRequest(BaseModel):
+    account_email: str
+    display_name: str | None = None
+    google_account_id: str | None = None
+    encrypted_refresh_token: str | None = None
+    access_scope: str | None = None
+    status: str = "connected"
+
+
+class GmailConnectionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    account_email: str
+    display_name: str | None
+    google_account_id: str | None
+    access_scope: str | None
+    status: str
+    sync_cursor: str | None
+    last_synced_at: datetime | None
+    created_at: datetime
+    updated_at: datetime | None
+
+
+class AppHomeMailbox(BaseModel):
+    id: UUID
+    account_email: str
+    status: str
+
+
+class AppHomeRecentContainer(BaseModel):
+    container_no: str
+    status_text: str | None
+    eta: date | None
+    updated_at: datetime | None
+
+
+class AppHomeResponse(BaseModel):
+    has_data: bool
+    container_count: int
+    last_sync_at: datetime | None
+    connected_mailboxes: list[AppHomeMailbox]
+    recent_containers: list[AppHomeRecentContainer]
+
+
+class CreateSyncJobRequest(BaseModel):
+    gmail_connection_id: UUID
+    query: str | None = None
+    date_from: date | None = None
+    date_to: date | None = None
+    max_results: int = Field(default=200, ge=1, le=1000)
+
+
+class UpdateSyncJobRequest(BaseModel):
+    status: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    emails_fetched: int | None = None
+    attachments_found: int | None = None
+    pdf_text_extracted: int | None = None
+    containers_upserted: int | None = None
+    error_message: str | None = None
+
+
+class SyncJobResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    gmail_connection_id: UUID
+    query: str | None
+    date_from: date | None
+    date_to: date | None
+    max_results: int
+    status: str
+    emails_fetched: int
+    attachments_found: int
+    pdf_text_extracted: int
+    containers_upserted: int
+    error_message: str | None
+    started_at: datetime | None
+    completed_at: datetime | None
+    created_at: datetime
+    updated_at: datetime | None
+
+
+class SyncJobListResponse(BaseModel):
+    items: list[SyncJobResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+class IngestAttachmentRequest(BaseModel):
+    gmail_attachment_id: str | None = None
+    filename: str
+    mime_type: str
+    size_bytes: int | None = None
+    storage_path: str | None = None
+    is_text_pdf: bool = True
+    text_extract_status: str = "extracted"
+    extracted_text: str | None = None
+    document_type: str | None = None
+
+
+class IngestFactRequest(BaseModel):
+    field_name: str
+    field_value: str
+    normalized_value: str | None = None
+    container_no: str | None = None
+    source_type: str
+    source_label: str | None = None
+    document_type: str | None = None
+    confidence: Decimal | None = None
+    source_sent_at: datetime | None = None
+    attachment_filename: str | None = None
+
+
+class ProcessedEmailIngestRequest(BaseModel):
+    gmail_connection_id: UUID
+    sync_job_id: UUID | None = None
+    gmail_message_id: str
+    gmail_thread_id: str | None = None
+    subject: str
+    from_email: str
+    to_emails: list[str] = Field(default_factory=list)
+    cc_emails: list[str] = Field(default_factory=list)
+    sent_at: datetime
+    snippet: str | None = None
+    body_text: str | None = None
+    body_html: str | None = None
+    raw_labels: list[str] = Field(default_factory=list)
+    has_pdf_attachments: bool = False
+    attachments: list[IngestAttachmentRequest] = Field(default_factory=list)
+    extracted_facts: list[IngestFactRequest] = Field(default_factory=list)
+
+
+class ProcessedEmailIngestResponse(BaseModel):
+    email_id: UUID
+    created: bool
+    attachment_count: int
+    fact_count: int
+    linked_containers: list[str]
+
+
+class ContainerListItem(BaseModel):
+    id: UUID
+    container_no: str
+    booking_no: str | None
+    bl_no: str | None
+    po_no: str | None
+    vessel: str | None
+    voyage: str | None
+    pol: str | None
+    pod: str | None
+    etd: date | None
+    eta: date | None
+    status_text: str | None
+    source_count: int
+    attachment_count: int
+    updated_at: datetime | None
+
+
+class ContainerListResponse(BaseModel):
+    items: list[ContainerListItem]
+    total: int
+    page: int
+    page_size: int
+
+
+class RelatedEmailSummary(BaseModel):
+    id: UUID
+    subject: str
+    from_email: str
+    sent_at: datetime
+
+
+class RelatedAttachmentSummary(BaseModel):
+    id: UUID
+    filename: str
+    email_id: UUID
+    document_type: str | None
+
+
+class ContainerDetailResponse(BaseModel):
+    container: ContainerListItem
+    related_emails: list[RelatedEmailSummary]
+    related_attachments: list[RelatedAttachmentSummary]
+
+
+class ContainerFactResponse(BaseModel):
+    id: UUID
+    field_name: str
+    field_value: str
+    normalized_value: str | None
+    source_type: str
+    source_label: str | None
+    document_type: str | None
+    confidence: Decimal | None
+    source_sent_at: datetime | None
+    email_id: UUID
+    attachment_id: UUID | None
+
+
+class ContainerFactsListResponse(BaseModel):
+    items: list[ContainerFactResponse]
+
+
+class EmailDetailResponse(BaseModel):
+    email: dict
+    attachments: list[dict]
+    extracted_facts: list[dict]
+    linked_containers: list[str]
+
+
+class EmailListItem(BaseModel):
+    id: UUID
+    gmail_connection_id: UUID
+    sync_job_id: UUID | None
+    gmail_message_id: str
+    subject: str
+    from_email: str
+    sent_at: datetime
+    snippet: str | None
+    has_pdf_attachments: bool
+    processing_status: str
+    linked_containers: list[str] = Field(default_factory=list)
+    attachment_count: int = 0
+    fact_count: int = 0
+
+
+class EmailListResponse(BaseModel):
+    items: list[EmailListItem]
+    total: int
+    page: int
+    page_size: int

@@ -1,222 +1,282 @@
-import { useParams, Link } from 'react-router';
-import { mockShipments, mockTimeline } from '../data/mockData';
-import { AlertTriangle, Ship, MapPin, Calendar, FileText, MessageSquare, Upload, Edit, Flag } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router';
+import { ArrowLeft, Calendar, FileText, Mail, MapPin, Ship } from 'lucide-react';
+import { getContainer, getContainerFacts } from '../lib/agentify-api';
+import type { ContainerDetailResponse, ContainerFact } from '../types/api';
+import { formatDate, formatDateTime, toTitleCase } from '../lib/format';
 
 export function ShipmentDetail() {
-  const { id } = useParams();
-  const shipment = mockShipments.find(s => s.id === id) || mockShipments[0];
+  const { containerNo } = useParams();
+  const [detail, setDetail] = useState<ContainerDetailResponse | null>(null);
+  const [facts, setFacts] = useState<ContainerFact[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const checklist = [
-    { item: 'Booking Confirmation', status: 'complete' },
-    { item: 'B/L Draft', status: 'complete' },
-    { item: 'Arrival Notice', status: 'complete' },
-    { item: 'D/O', status: 'missing' },
-    { item: 'Trạng thái hải quan', status: 'missing' },
-    { item: 'Trucking status', status: 'missing' },
-    { item: 'POD', status: 'missing' }
-  ];
+  useEffect(() => {
+    if (!containerNo) {
+      return;
+    }
+
+    async function loadContainer() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [detailResponse, factsResponse] = await Promise.all([
+          getContainer(containerNo),
+          getContainerFacts(containerNo),
+        ]);
+        setDetail(detailResponse);
+        setFacts(factsResponse.items);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : 'Không tải được container.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadContainer();
+  }, [containerNo]);
+
+  const groupedFacts = useMemo(() => {
+    return facts.reduce<Record<string, ContainerFact[]>>((accumulator, fact) => {
+      if (!accumulator[fact.field_name]) {
+        accumulator[fact.field_name] = [];
+      }
+      accumulator[fact.field_name].push(fact);
+      return accumulator;
+    }, {});
+  }, [facts]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[100dvh] bg-[#f7f7f1] p-5 sm:p-6 lg:p-8">
+        <div className="mx-auto max-w-7xl rounded-[24px] border border-slate-200 bg-white p-6 text-slate-500">
+          Đang tải chi tiết container...
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !detail) {
+    return (
+      <div className="min-h-[100dvh] bg-[#f7f7f1] p-5 sm:p-6 lg:p-8">
+        <div className="mx-auto max-w-7xl rounded-[24px] border border-slate-200 bg-white p-6">
+          <p className="text-rose-700">{error || 'Không tìm thấy container.'}</p>
+          <Link to="/" className="mt-4 inline-flex text-slate-900 hover:underline">
+            Quay lại tra cứu
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const { container, related_attachments: relatedAttachments, related_emails: relatedEmails } = detail;
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-card rounded-lg border border-border p-6 mb-6">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-semibold text-foreground mb-2">{shipment.id}</h1>
-              <p className="text-muted-foreground">Khách hàng: {shipment.customer}</p>
-            </div>
-            <div className="flex gap-2">
-              <span className={`px-3 py-1 rounded-full text-sm ${
-                shipment.status.includes('Đã giao') ? 'bg-success/10 text-success' :
-                'bg-secondary/10 text-secondary'
-              }`}>
-                {shipment.status}
-              </span>
-              {shipment.missing.length > 0 && (
-                <span className="px-3 py-1 rounded-full text-sm bg-warning/10 text-warning flex items-center gap-1">
-                  <AlertTriangle className="w-4 h-4" />
-                  Thiếu {shipment.missing.join(', ')}
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">PIC:</span>
-            <span className="font-medium text-foreground">{shipment.pic || 'Chưa gán'}</span>
-          </div>
-        </div>
+    <div className="min-h-[100dvh] bg-[#f7f7f1] p-5 sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Quay lại tra cứu
+        </Link>
 
-        {/* Identification card */}
-        <div className="bg-card rounded-lg border border-border p-6 mb-6">
-          <h3 className="font-medium mb-4 text-card-foreground">Thông tin định danh</h3>
-          <div className="grid grid-cols-4 gap-6">
+        <div className="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Container</p>
-              <p className="font-mono font-medium text-foreground">{shipment.container}</p>
+              <p className="text-sm uppercase tracking-[0.16em] text-slate-500">Container</p>
+              <h1 className="mt-3 font-mono text-4xl font-semibold tracking-[-0.04em] text-slate-900">
+                {container.container_no}
+              </h1>
+              <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">
+                {container.status_text || 'Chưa có status summary trong DB.'}{' '}
+                Thông tin dưới đây là bản aggregate mới nhất từ email và PDF đã ingest.
+              </p>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Seal</p>
-              <p className="font-mono font-medium text-foreground">{shipment.seal || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Booking</p>
-              <p className="font-mono font-medium text-foreground">{shipment.booking}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">B/L</p>
-              <p className="font-mono font-medium text-foreground">{shipment.bl || 'Chưa có'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">PO</p>
-              <p className="font-mono font-medium text-foreground">{shipment.po || '-'}</p>
-            </div>
-            <div className="col-span-3">
-              <p className="text-sm text-muted-foreground mb-1">Vessel/Voyage</p>
-              <p className="font-medium text-foreground">{shipment.vessel} / {shipment.voyage}</p>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:w-[360px]">
+              <div className="rounded-[22px] border border-slate-200 bg-[#fcfbf8] p-4">
+                <p className="text-sm text-slate-500">ETA / ETD</p>
+                <p className="mt-2 text-lg font-semibold text-slate-900">
+                  {formatDate(container.eta)} / {formatDate(container.etd)}
+                </p>
+              </div>
+              <div className="rounded-[22px] border border-slate-200 bg-[#fcfbf8] p-4">
+                <p className="text-sm text-slate-500">POL → POD</p>
+                <p className="mt-2 text-lg font-semibold text-slate-900">
+                  {container.pol || '-'} → {container.pod || '-'}
+                </p>
+              </div>
+              <div className="rounded-[22px] border border-slate-200 bg-[#fcfbf8] p-4">
+                <p className="text-sm text-slate-500">Nguồn dữ liệu</p>
+                <p className="mt-2 text-lg font-semibold text-slate-900">
+                  {container.source_count} facts / {container.attachment_count} files
+                </p>
+              </div>
+              <div className="rounded-[22px] border border-slate-200 bg-[#fcfbf8] p-4">
+                <p className="text-sm text-slate-500">Cập nhật</p>
+                <p className="mt-2 text-lg font-semibold text-slate-900">
+                  {formatDateTime(container.updated_at)}
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Route card */}
-        <div className="bg-card rounded-lg border border-border p-6 mb-6">
-          <h3 className="font-medium mb-4 text-card-foreground flex items-center gap-2">
-            <Ship className="w-5 h-5 text-primary" />
-            Tuyến vận chuyển
-          </h3>
-          <div className="grid grid-cols-4 gap-6">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
-                <MapPin className="w-4 h-4" /> POL
-              </p>
-              <p className="font-medium text-foreground">{shipment.pol}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
-                <MapPin className="w-4 h-4" /> POD
-              </p>
-              <p className="font-medium text-foreground">{shipment.pod}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
-                <Calendar className="w-4 h-4" /> ETD
-              </p>
-              <p className="font-medium text-foreground">{new Date(shipment.etd).toLocaleDateString('vi-VN')}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
-                <Calendar className="w-4 h-4" /> ETA
-              </p>
-              <p className="font-medium text-foreground">{new Date(shipment.eta).toLocaleDateString('vi-VN')}</p>
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground mt-4">
-            Cập nhật mới nhất: {shipment.lastUpdate} từ email Maersk
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-6">
-          {/* Timeline */}
-          <div className="bg-card rounded-lg border border-border p-6">
-            <h3 className="font-medium mb-4 text-card-foreground">Timeline</h3>
-            <div className="space-y-4">
-              {mockTimeline.map((item, idx) => (
-                <div key={idx} className="flex gap-4">
-                  <div className="flex flex-col items-center">
-                    <div className={`w-3 h-3 rounded-full ${
-                      idx === mockTimeline.length - 1 ? 'bg-primary' : 'bg-secondary'
-                    }`} />
-                    {idx < mockTimeline.length - 1 && (
-                      <div className="w-0.5 h-full bg-border mt-1" />
-                    )}
-                  </div>
-                  <div className="flex-1 pb-4">
-                    <p className="text-sm text-muted-foreground">{item.date}</p>
-                    <p className="font-medium text-foreground">{item.event}</p>
-                    <p className="text-sm text-muted-foreground">Source: {item.source}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Summary and checklist */}
+        <div className="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
           <div className="space-y-6">
-            {/* AI Summary */}
-            <div className="bg-card rounded-lg border border-border p-6">
-              <h3 className="font-medium mb-3 text-card-foreground">Tóm tắt tự động</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Lô hàng nhập FCL của {shipment.customer}. Hệ thống đã tìm thấy Booking Confirmation, B/L Draft và Arrival Notice.
-                ETA hiện tại là {new Date(shipment.eta).toLocaleDateString('vi-VN')} tại {shipment.pod}.
-                Chưa thấy dữ liệu D/O, trucking status hoặc POD trong Agentify.
-              </p>
+            <div className="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8">
+              <h2 className="text-xl font-semibold text-slate-900">Thông tin chính</h2>
+              <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <div>
+                  <p className="text-sm text-slate-500">Booking</p>
+                  <p className="mt-1 font-mono text-slate-900">{container.booking_no || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">B/L</p>
+                  <p className="mt-1 font-mono text-slate-900">{container.bl_no || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">PO</p>
+                  <p className="mt-1 font-mono text-slate-900">{container.po_no || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Updated</p>
+                  <p className="mt-1 text-slate-900">{formatDateTime(container.updated_at)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Vessel</p>
+                  <p className="mt-1 text-slate-900">{container.vessel || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Voyage</p>
+                  <p className="mt-1 text-slate-900">{container.voyage || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">POL</p>
+                  <p className="mt-1 text-slate-900">{container.pol || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">POD</p>
+                  <p className="mt-1 text-slate-900">{container.pod || '-'}</p>
+                </div>
+              </div>
             </div>
 
-            {/* Checklist */}
-            <div className="bg-card rounded-lg border border-border p-6">
-              <h3 className="font-medium mb-4 text-card-foreground">Checklist</h3>
-              <div className="space-y-2">
-                {checklist.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                    <span className="text-sm text-foreground">{item.item}</span>
-                    <span className={`text-sm px-2 py-0.5 rounded ${
-                      item.status === 'complete'
-                        ? 'bg-success/10 text-success'
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {item.status === 'complete' ? 'Đã có' : 'Chưa thấy'}
-                    </span>
+            <div className="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8">
+              <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-900">
+                <Ship className="h-5 w-5 text-slate-500" />
+                Source evidence
+              </h2>
+              <p className="mt-2 text-sm leading-7 text-slate-600">
+                Mỗi field đều giữ lịch sử nguồn để CS/Ops biết giá trị hiện tại đến từ email hoặc
+                PDF nào.
+              </p>
+              <div className="mt-5 space-y-4">
+                {Object.entries(groupedFacts).map(([fieldName, fieldFacts]) => (
+                  <div key={fieldName} className="rounded-[24px] border border-slate-200 bg-[#fcfbf8] p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm text-slate-500">{toTitleCase(fieldName)}</p>
+                        <p className="mt-2 text-lg font-semibold text-slate-900">
+                          {fieldFacts[0]?.field_value || '-'}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs text-slate-600">
+                        {fieldFacts.length} nguồn
+                      </span>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      {fieldFacts.map((fact) => (
+                        <div key={fact.id} className="rounded-[18px] border border-slate-200 bg-white p-4 text-sm">
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="font-medium text-slate-900">{fact.field_value}</span>
+                            <span className="text-slate-500">{formatDateTime(fact.source_sent_at)}</span>
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-slate-500">
+                            <span>{fact.document_type || fact.source_type}</span>
+                            <span>•</span>
+                            <span>{fact.source_label || 'No source label'}</span>
+                            {fact.email_id ? (
+                              <>
+                                <span>•</span>
+                                <Link to={`/emails/${fact.email_id}`} className="font-medium text-slate-900 hover:underline">
+                                  Mở email
+                                </Link>
+                              </>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
-              </div>
-            </div>
-
-            {/* Data sources */}
-            <div className="bg-card rounded-lg border border-border p-6">
-              <h3 className="font-medium mb-3 text-card-foreground flex items-center gap-2">
-                <FileText className="w-5 h-5 text-primary" />
-                Nguồn dữ liệu
-              </h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-2xl font-semibold text-foreground">4</p>
-                  <p className="text-muted-foreground">Email liên quan</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-semibold text-foreground">3</p>
-                  <p className="text-muted-foreground">PDF đã đọc</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-semibold text-muted-foreground">0</p>
-                  <p className="text-muted-foreground">Ảnh/OCR</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-semibold text-foreground">1</p>
-                  <p className="text-muted-foreground">Dòng Excel import</p>
-                </div>
+                {facts.length === 0 ? (
+                  <div className="rounded-[24px] border border-dashed border-slate-300 p-5 text-sm text-slate-500">
+                    Container này chưa có fact provenance.
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-3 mt-6">
-          <Link to="/ai" className="bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2">
-            <MessageSquare className="w-4 h-4" />
-            Hỏi về lô hàng này
-          </Link>
-          <button className="bg-card text-card-foreground border border-border px-6 py-2 rounded-lg font-medium hover:bg-accent transition-colors flex items-center gap-2">
-            <Upload className="w-4 h-4" />
-            Upload tài liệu
-          </button>
-          <button className="bg-card text-card-foreground border border-border px-6 py-2 rounded-lg font-medium hover:bg-accent transition-colors flex items-center gap-2">
-            <Edit className="w-4 h-4" />
-            Thêm ghi chú
-          </button>
-          <button className="bg-card text-card-foreground border border-border px-6 py-2 rounded-lg font-medium hover:bg-accent transition-colors flex items-center gap-2">
-            <Flag className="w-4 h-4" />
-            Đánh dấu cần review
-          </button>
+          <div className="space-y-6">
+            <div className="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8">
+              <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-900">
+                <Mail className="h-5 w-5 text-slate-500" />
+                Related emails
+              </h2>
+              <div className="mt-5 space-y-3">
+                {relatedEmails.map((email) => (
+                  <Link
+                    key={email.id}
+                    to={`/emails/${email.id}`}
+                    className="block rounded-[22px] border border-slate-200 bg-[#fcfbf8] p-4 transition hover:border-slate-900 hover:bg-white"
+                  >
+                    <p className="font-medium text-slate-900">{email.subject}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                      <span>{email.from_email}</span>
+                      <span>•</span>
+                      <span>{formatDateTime(email.sent_at)}</span>
+                    </div>
+                  </Link>
+                ))}
+                {relatedEmails.length === 0 ? (
+                  <div className="rounded-[22px] border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                    Chưa có email liên kết trực tiếp với container này.
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8">
+              <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-900">
+                <FileText className="h-5 w-5 text-slate-500" />
+                Related attachments
+              </h2>
+              <div className="mt-5 space-y-3">
+                {relatedAttachments.map((attachment) => (
+                  <div key={attachment.id} className="rounded-[22px] border border-slate-200 bg-[#fcfbf8] p-4">
+                    <p className="font-medium text-slate-900">{attachment.filename}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                      <span>{attachment.document_type || 'Unknown document type'}</span>
+                      <span>•</span>
+                      <Link to={`/emails/${attachment.email_id}`} className="font-medium text-slate-900 hover:underline">
+                        Email nguồn
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+                {relatedAttachments.length === 0 ? (
+                  <div className="rounded-[22px] border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                    Chưa có attachment liên kết trực tiếp với container này.
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

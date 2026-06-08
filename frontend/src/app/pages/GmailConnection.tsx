@@ -1,111 +1,265 @@
-import { Mail, Shield, FileText, X, Check } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
+import { Check, Database, Mail, RefreshCw, Shield } from 'lucide-react';
+import { getHealth, listGmailConnections, upsertGmailConnection } from '../lib/agentify-api';
+import type { GmailConnection, HealthResponse } from '../types/api';
+import { formatDateTime } from '../lib/format';
 
 const steps = [
-  { num: 1, name: 'Kết nối Gmail', active: true },
-  { num: 2, name: 'Sync email', active: false },
-  { num: 3, name: 'Trích xuất dữ liệu', active: false },
-  { num: 4, name: 'Xem danh sách lô hàng', active: false },
-  { num: 5, name: 'Hỏi AI nếu cần', active: false }
+  { num: 1, name: 'Kết nối Gmail' },
+  { num: 2, name: 'Tạo sync job' },
+  { num: 3, name: 'Ingest email + PDF text' },
+  { num: 4, name: 'Tra cứu theo container' },
 ];
 
 const permissions = [
-  { text: 'Đọc tiêu đề email', allowed: true },
-  { text: 'Đọc nội dung email', allowed: true },
-  { text: 'Đọc file PDF đính kèm có text', allowed: true },
-  { text: 'Không gửi email', allowed: false },
-  { text: 'Không xóa email', allowed: false },
-  { text: 'Không đọc Zalo trong prototype này', allowed: false }
+  'Đọc tiêu đề email',
+  'Đọc nội dung email',
+  'Đọc file PDF text-based',
+  'Không gửi hoặc xóa email',
 ];
 
+const initialForm = {
+  account_email: '',
+  display_name: '',
+  google_account_id: '',
+  access_scope: 'gmail.readonly',
+  encrypted_refresh_token: 'prototype-token',
+  status: 'connected',
+};
+
 export function GmailConnection() {
+  const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [connections, setConnections] = useState<GmailConnection[]>([]);
+  const [form, setForm] = useState(initialForm);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  async function loadData() {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [healthResponse, connectionsResponse] = await Promise.all([
+        getHealth(),
+        listGmailConnections(),
+      ]);
+      setHealth(healthResponse);
+      setConnections(connectionsResponse);
+      if (connectionsResponse[0]) {
+        setForm((current) => ({
+          ...current,
+          account_email: current.account_email || connectionsResponse[0].account_email,
+          display_name: current.display_name || connectionsResponse[0].display_name || '',
+        }));
+      }
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Không tải được dữ liệu.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await upsertGmailConnection({
+        account_email: form.account_email,
+        display_name: form.display_name || undefined,
+        google_account_id: form.google_account_id || undefined,
+        encrypted_refresh_token: form.encrypted_refresh_token,
+        access_scope: form.access_scope,
+        status: form.status,
+      });
+      setSuccess('Đã lưu kết nối Gmail vào backend.');
+      await loadData();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Không lưu được kết nối.');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Steps sidebar */}
-        <div className="mb-8">
-          <div className="bg-card rounded-lg border border-border p-6">
-            <h3 className="font-medium mb-4 text-card-foreground">Quy trình</h3>
-            <div className="space-y-3">
-              {steps.map((step) => (
-                <div key={step.num} className={`flex items-center gap-3 ${step.active ? 'text-primary' : 'text-muted-foreground'}`}>
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center border-2 ${
-                    step.active ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
-                  }`}>
-                    {step.num}
-                  </div>
-                  <span>{step.name}</span>
-                </div>
-              ))}
+      <div className="max-w-6xl mx-auto space-y-6">
+        <div className="bg-card rounded-lg border border-border p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-semibold text-card-foreground">Kết nối Gmail</h1>
+              <p className="mt-2 text-muted-foreground">
+                Prototype này lưu mailbox kết nối ở backend, sau đó tạo sync job để service ingest xử lý email và PDF.
+              </p>
             </div>
+            <button
+              onClick={loadData}
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-card-foreground hover:bg-accent"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Làm mới
+            </button>
           </div>
         </div>
 
-        {/* Main panel */}
-        <div className="bg-card rounded-lg border border-border p-8">
-          <div className="max-w-2xl">
-            <h1 className="text-3xl font-semibold mb-3 text-card-foreground">Kết nối hộp thư logistics</h1>
-            <p className="text-muted-foreground mb-8">
-              Agentify đọc email logistics ở chế độ read-only để trích xuất container, booking, B/L, PO, ETA và chứng từ PDF.
-            </p>
-
-            <button className="bg-primary text-primary-foreground px-8 py-4 rounded-lg font-medium text-lg hover:bg-primary/90 transition-colors flex items-center gap-3 mb-2">
-              <Mail className="w-6 h-6" />
-              Kết nối Gmail
-            </button>
-            <div className="flex items-center gap-2 mb-8">
-              <div className="px-3 py-1 bg-muted rounded-full text-sm text-muted-foreground flex items-center gap-1.5">
-                <Shield className="w-4 h-4" />
-                Read-only
-              </div>
-            </div>
-
-            {/* Permissions card */}
-            <div className="bg-accent/30 border border-border rounded-lg p-6 mb-8">
-              <h3 className="font-medium mb-4 text-card-foreground flex items-center gap-2">
-                <Shield className="w-5 h-5 text-primary" />
-                Quyền truy cập
-              </h3>
-              <div className="space-y-3">
-                {permissions.map((perm, idx) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    {perm.allowed ? (
-                      <Check className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
-                    ) : (
-                      <X className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                    )}
-                    <span className={perm.allowed ? 'text-foreground' : 'text-muted-foreground'}>{perm.text}</span>
+        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-6">
+            <div className="bg-card rounded-lg border border-border p-6">
+              <h2 className="font-medium text-card-foreground">Quy trình</h2>
+              <div className="mt-4 space-y-3">
+                {steps.map((step, index) => (
+                  <div key={step.num} className="flex items-center gap-3">
+                    <div
+                      className={`flex h-8 w-8 items-center justify-center rounded-full border text-sm ${
+                        index === 0
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border text-muted-foreground'
+                      }`}
+                    >
+                      {step.num}
+                    </div>
+                    <span className={index === 0 ? 'text-foreground' : 'text-muted-foreground'}>
+                      {step.name}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Preview card */}
-            <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="font-medium mb-4 text-card-foreground flex items-center gap-2">
-                <FileText className="w-5 h-5 text-primary" />
-                Ví dụ dữ liệu sẽ được trích xuất
-              </h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="bg-card rounded-lg border border-border p-6">
+              <div className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-primary" />
+                <h2 className="font-medium text-card-foreground">Quyền truy cập</h2>
+              </div>
+              <div className="mt-4 space-y-3">
+                {permissions.map((permission) => (
+                  <div key={permission} className="flex items-start gap-3">
+                    <Check className="mt-0.5 w-4 h-4 text-success" />
+                    <span className="text-foreground">{permission}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-card rounded-lg border border-border p-6">
+              <div className="flex items-center gap-2">
+                <Database className="w-5 h-5 text-primary" />
+                <h2 className="font-medium text-card-foreground">Trạng thái backend</h2>
+              </div>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div className="rounded-lg border border-border bg-accent/30 p-4">
+                  <p className="text-sm text-muted-foreground">API</p>
+                  <p className="mt-1 text-lg font-medium text-foreground">
+                    {health?.status || (isLoading ? 'Đang kiểm tra...' : 'Chưa rõ')}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-accent/30 p-4">
+                  <p className="text-sm text-muted-foreground">Database</p>
+                  <p className="mt-1 text-lg font-medium text-foreground">
+                    {health?.database || (isLoading ? 'Đang kiểm tra...' : 'Chưa rõ')}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-4 text-sm text-muted-foreground">
+                Local dev dùng proxy qua Vite. Production nên để frontend gọi same-origin `/api` và `/health`.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-card rounded-lg border border-border p-6">
+              <div className="flex items-center gap-2">
+                <Mail className="w-5 h-5 text-primary" />
+                <h2 className="font-medium text-card-foreground">Tạo hoặc cập nhật mailbox</h2>
+              </div>
+              <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
                 <div>
-                  <span className="text-muted-foreground">Container:</span>
-                  <p className="font-medium text-card-foreground">MSCU1234567</p>
+                  <label className="mb-2 block text-sm text-muted-foreground">Email Gmail</label>
+                  <input
+                    required
+                    value={form.account_email}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, account_email: event.target.value }))
+                    }
+                    placeholder="ops@forwarder-demo.com"
+                    className="w-full rounded-lg border border-border bg-input-background px-4 py-2.5 outline-none focus:ring-2 focus:ring-ring"
+                  />
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Booking:</span>
-                  <p className="font-medium text-card-foreground">BKG-88921</p>
+                  <label className="mb-2 block text-sm text-muted-foreground">Tên hiển thị</label>
+                  <input
+                    value={form.display_name}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, display_name: event.target.value }))
+                    }
+                    placeholder="Ops Forwarder Demo"
+                    className="w-full rounded-lg border border-border bg-input-background px-4 py-2.5 outline-none focus:ring-2 focus:ring-ring"
+                  />
                 </div>
                 <div>
-                  <span className="text-muted-foreground">B/L:</span>
-                  <p className="font-medium text-card-foreground">HLCUSHA250601234</p>
+                  <label className="mb-2 block text-sm text-muted-foreground">Google Account ID</label>
+                  <input
+                    value={form.google_account_id}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, google_account_id: event.target.value }))
+                    }
+                    placeholder="google-account-id"
+                    className="w-full rounded-lg border border-border bg-input-background px-4 py-2.5 outline-none focus:ring-2 focus:ring-ring"
+                  />
                 </div>
-                <div>
-                  <span className="text-muted-foreground">ETA:</span>
-                  <p className="font-medium text-card-foreground">12/06/2026</p>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-muted-foreground">Loại tài liệu:</span>
-                  <p className="font-medium text-card-foreground">Arrival Notice</p>
-                </div>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  <Mail className="w-4 h-4" />
+                  {isSaving ? 'Đang lưu...' : 'Lưu kết nối Gmail'}
+                </button>
+              </form>
+              {success ? <p className="mt-4 text-sm text-success">{success}</p> : null}
+              {error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null}
+            </div>
+
+            <div className="bg-card rounded-lg border border-border p-6">
+              <div className="flex items-center justify-between gap-4">
+                <h2 className="font-medium text-card-foreground">Mailbox đã lưu</h2>
+                <Link to="/sync" className="text-sm font-medium text-primary hover:underline">
+                  Sang màn sync
+                </Link>
+              </div>
+              <div className="mt-4 space-y-3">
+                {connections.map((connection) => (
+                  <div key={connection.id} className="rounded-lg border border-border p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-medium text-foreground">{connection.account_email}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {connection.display_name || 'Chưa có display name'}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">
+                        {connection.status}
+                      </span>
+                    </div>
+                    <div className="mt-3 grid gap-2 text-sm text-muted-foreground">
+                      <p>Scope: {connection.access_scope || 'gmail.readonly'}</p>
+                      <p>Last sync: {formatDateTime(connection.last_synced_at)}</p>
+                    </div>
+                  </div>
+                ))}
+                {!isLoading && connections.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+                    Chưa có mailbox nào trong backend.
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>

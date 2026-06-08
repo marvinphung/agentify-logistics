@@ -33,4 +33,22 @@ export default defineConfig({
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
+  server: {
+    proxy: {
+      '/api': {
+        target: process.env.VITE_PROXY_API_TARGET || 'http://127.0.0.1:8766',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/health': {
+        target: process.env.VITE_PROXY_API_TARGET || 'http://127.0.0.1:8766',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/app/test/setup.ts',
+  },
 })

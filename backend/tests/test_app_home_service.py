@@ -1,0 +1,40 @@
+from datetime import UTC, date, datetime
+from types import SimpleNamespace
+from unittest import IsolatedAsyncioTestCase
+from unittest.mock import AsyncMock
+from uuid import uuid4
+
+from services.app_home_service import build_app_home_payload
+
+
+class AppHomeServiceTest(IsolatedAsyncioTestCase):
+    async def test_builds_home_payload_from_connections_jobs_and_containers(self):
+        connection = SimpleNamespace(
+            id=uuid4(),
+            account_email="demo-logistics@agentify.vn",
+            status="connected",
+        )
+        latest_job = SimpleNamespace(
+            completed_at=datetime(2026, 6, 8, 4, 35, tzinfo=UTC)
+        )
+        recent_container = SimpleNamespace(
+            container_no="MSCU1234567",
+            status_text="Arrival Notice revised",
+            eta=date(2026, 6, 14),
+            updated_at=datetime(2026, 6, 8, 4, 35, tzinfo=UTC),
+        )
+
+        payload = await build_app_home_payload(
+            db=AsyncMock(),
+            list_connections=AsyncMock(return_value=[connection]),
+            get_latest_completed_job=AsyncMock(return_value=latest_job),
+            list_recent_containers=AsyncMock(return_value=[recent_container]),
+            count_containers=AsyncMock(return_value=3),
+        )
+
+        self.assertTrue(payload.has_data)
+        self.assertEqual(payload.container_count, 3)
+        self.assertEqual(
+            payload.connected_mailboxes[0].account_email, "demo-logistics@agentify.vn"
+        )
+        self.assertEqual(payload.recent_containers[0].container_no, "MSCU1234567")

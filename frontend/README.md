@@ -1,11 +1,45 @@
+# Agentify Logistics Frontend
 
-  # Agentify
+Frontend này gọi trực tiếp backend `Agentify Logistics` qua các API:
 
-  This is a code bundle for Agentify. The original project is available at https://www.figma.com/design/pwJ0ngZLljcEESgYdhD4q1/Agentify.
+- `/health`
+- `/api/v1/app-home`
+- `/api/v1/gmail-connections`
+- `/api/v1/sync-jobs`
+- `/api/v1/containers`
+- `/api/v1/emails`
 
-  ## Running the code
+## Chạy local
 
-  Run `npm i` to install the dependencies.
+1. Cài dependencies:
 
-  Run `npm run dev` to start the development server.
-  
+```bash
+npm install
+```
+
+2. Chạy backend ở `http://127.0.0.1:8766`
+
+3. Tạo `.env` từ `.env.example` nếu cần chỉnh proxy target
+
+4. Chạy Vite dev server:
+
+```bash
+npm run dev -- --host 127.0.0.1 --port 5173
+```
+
+Local dev nên để `VITE_API_BASE_URL` rỗng. Khi đó `vite.config.ts` sẽ proxy `/api` và `/health` sang `VITE_PROXY_API_TARGET`, mặc định là `http://127.0.0.1:8766`.
+
+## Production
+
+Production nên ưu tiên để frontend gọi same-origin `/api` và `/health`.
+
+- Nếu deploy trên Vercel, giữ `VITE_API_BASE_URL` rỗng và dùng `vercel.json` rewrite sang `http://131.153.239.187:8766`.
+- Nếu build static rồi đặt sau reverse proxy riêng, cũng giữ `VITE_API_BASE_URL` rỗng và để proxy ở Nginx/Caddy xử lý `/api` và `/health`.
+- Chỉ set `VITE_API_BASE_URL` khi anh thật sự muốn bundle FE với một backend base URL cố định.
+
+## Màn hình đã nối BE
+
+- `Tra cứu` (`/`): dùng `app-home` + `containers` để search-first lookup
+- `Thiết lập dữ liệu` (`/setup`): list/upsert `gmail_connections`, create/list `sync_jobs`, list `emails`
+- `Container detail`: detail + `facts`
+- `Email detail`: email raw + attachments + extracted facts
