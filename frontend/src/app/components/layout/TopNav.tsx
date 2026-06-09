@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router';
-import { Database, Search } from 'lucide-react';
+import { Database, List, Search } from 'lucide-react';
 
 function navClass(isActive: boolean): string {
   return isActive
@@ -19,7 +19,7 @@ export function TopNav() {
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-900">Agentify</p>
-            <p className="text-xs text-slate-500">Container Lookup Prototype</p>
+            <p className="text-xs text-slate-500">Tra cứu container cho CS/Ops</p>
           </div>
         </Link>
 
@@ -40,6 +40,15 @@ export function TopNav() {
           >
             <Database className="h-4 w-4" />
             Thiết lập dữ liệu
+          </Link>
+          <Link
+            to="/containers"
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${navClass(
+              location.pathname === '/containers',
+            )}`}
+          >
+            <List className="h-4 w-4" />
+            Tất cả container
           </Link>
         </nav>
       </div>

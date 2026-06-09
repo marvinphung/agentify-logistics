@@ -23,6 +23,18 @@ DEMO_DISPLAY_NAME = "Agentify Demo Logistics"
 DEMO_GOOGLE_ACCOUNT_ID = "agentify-demo-google-account"
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 DEMO_PDF_DIR = BACKEND_ROOT / "storage" / "demo_pdfs"
+DEMO_CONTAINER_NOS = [
+    "MSCU1234567",
+    "TGHU7654321",
+    "OOLU9988776",
+    "WHLU4455667",
+    "CAIU7788990",
+    "SEGU5566778",
+    "TRHU3344556",
+    "FSCU2211334",
+    "CMAU6677889",
+    "TEMU5544332",
+]
 
 
 def _dt(value: str) -> datetime:
@@ -100,10 +112,10 @@ def build_demo_payloads(
             from_email="booking@maersk-demo.com",
             to_emails=["ops@agentify.vn"],
             sent_at=_dt("2026-06-05T08:15:00Z"),
-            snippet="Booking confirmed for MSCU1234567 on MAERSK HANOI 126E.",
+            snippet="Đã xác nhận booking cho MSCU1234567 trên tàu MAERSK HANOI 126E.",
             body_text=(
-                "Container MSCU1234567 booked. Vessel MAERSK HANOI 126E. "
-                "ETD 2026-06-06 from Shanghai to Hai Phong."
+                "Container MSCU1234567 đã được đặt chỗ. Tàu MAERSK HANOI 126E. "
+                "ETD 2026-06-06 từ Shanghai đi Hai Phong."
             ),
             raw_labels=["INBOX", "LOGISTICS"],
             has_pdf_attachments=True,
@@ -206,11 +218,11 @@ def build_demo_payloads(
                 ),
                 IngestFactRequest(
                     field_name="status_text",
-                    field_value="Booking confirmed",
-                    normalized_value="Booking confirmed",
+                    field_value="Đã xác nhận booking",
+                    normalized_value="Đã xác nhận booking",
                     container_no="MSCU1234567",
                     source_type="email_body",
-                    source_label="Container MSCU1234567 booked.",
+                    source_label="Container MSCU1234567 đã được đặt chỗ.",
                     document_type="booking_confirmation",
                     confidence=Decimal("0.9500"),
                 ),
@@ -225,8 +237,8 @@ def build_demo_payloads(
             from_email="arrival@maersk-demo.com",
             to_emails=["cs@agentify.vn"],
             sent_at=_dt("2026-06-08T03:40:00Z"),
-            snippet="Arrival notice for MSCU1234567 ETA 12 Jun.",
-            body_text="Please find attached arrival notice for container MSCU1234567.",
+            snippet="Thông báo hàng đến cho MSCU1234567, ETA ngày 12/06.",
+            body_text="Vui lòng xem thông báo hàng đến đính kèm cho container MSCU1234567.",
             raw_labels=["INBOX", "ARRIVAL"],
             has_pdf_attachments=True,
             attachments=[
@@ -242,7 +254,7 @@ def build_demo_payloads(
                         "Container No: MSCU1234567\n"
                         "B/L No: HLCUSHA250601234\n"
                         "ETA: 2026-06-12\n"
-                        "Status: Arrival Notice received"
+                        "Status: Da nhan thong bao hang den"
                     ),
                     document_type="arrival_notice",
                 )
@@ -282,11 +294,11 @@ def build_demo_payloads(
                 ),
                 IngestFactRequest(
                     field_name="status_text",
-                    field_value="Arrival Notice received",
-                    normalized_value="Arrival Notice received",
+                    field_value="Đã nhận thông báo hàng đến",
+                    normalized_value="Đã nhận thông báo hàng đến",
                     container_no="MSCU1234567",
                     source_type="pdf_text",
-                    source_label="Status: Arrival Notice received",
+                    source_label="Status: Da nhan thong bao hang den",
                     document_type="arrival_notice",
                     confidence=Decimal("0.9600"),
                     attachment_filename="arrival_notice_mscu1234567_v1.pdf",
@@ -302,8 +314,8 @@ def build_demo_payloads(
             from_email="arrival@maersk-demo.com",
             to_emails=["cs@agentify.vn"],
             sent_at=_dt("2026-06-09T05:10:00Z"),
-            snippet="ETA updated to 14 Jun for MSCU1234567.",
-            body_text="ETA revised due to port congestion.",
+            snippet="ETA của MSCU1234567 đã được cập nhật sang ngày 14/06.",
+            body_text="ETA đã được điều chỉnh do ùn tắc cảng.",
             raw_labels=["INBOX", "ARRIVAL"],
             has_pdf_attachments=True,
             attachments=[
@@ -318,7 +330,7 @@ def build_demo_payloads(
                     extracted_text=(
                         "Container No: MSCU1234567\n"
                         "ETA revised: 2026-06-14\n"
-                        "Status: ETA revised due to congestion"
+                        "Status: ETA da dieu chinh do un tac cang"
                     ),
                     document_type="arrival_notice",
                 )
@@ -347,11 +359,11 @@ def build_demo_payloads(
                 ),
                 IngestFactRequest(
                     field_name="status_text",
-                    field_value="ETA revised due to congestion",
-                    normalized_value="ETA revised due to congestion",
+                    field_value="ETA đã điều chỉnh do ùn tắc cảng",
+                    normalized_value="ETA đã điều chỉnh do ùn tắc cảng",
                     container_no="MSCU1234567",
                     source_type="pdf_text",
-                    source_label="Status: ETA revised due to congestion",
+                    source_label="Status: ETA da dieu chinh do un tac cang",
                     document_type="arrival_notice",
                     confidence=Decimal("0.9700"),
                     attachment_filename="arrival_notice_mscu1234567_v2.pdf",
@@ -367,8 +379,8 @@ def build_demo_payloads(
             from_email="docs@shipper-demo.com",
             to_emails=["docs@agentify.vn"],
             sent_at=_dt("2026-06-07T01:25:00Z"),
-            snippet="Shipping instruction for TGHU7654321.",
-            body_text="Please process SI for container TGHU7654321.",
+            snippet="Hướng dẫn giao hàng cho TGHU7654321.",
+            body_text="Vui lòng xử lý SI cho container TGHU7654321.",
             raw_labels=["INBOX", "DOCS"],
             has_pdf_attachments=True,
             attachments=[
@@ -470,11 +482,11 @@ def build_demo_payloads(
                 ),
                 IngestFactRequest(
                     field_name="status_text",
-                    field_value="Shipping instruction received",
-                    normalized_value="Shipping instruction received",
+                    field_value="Đã nhận hướng dẫn giao hàng",
+                    normalized_value="Đã nhận hướng dẫn giao hàng",
                     container_no="TGHU7654321",
                     source_type="email_body",
-                    source_label="Please process SI for container TGHU7654321.",
+                    source_label="Vui lòng xử lý SI cho container TGHU7654321.",
                     document_type="shipping_instruction",
                     confidence=Decimal("0.9400"),
                 ),
@@ -489,8 +501,8 @@ def build_demo_payloads(
             from_email="docs@carrier-demo.com",
             to_emails=["docs@agentify.vn"],
             sent_at=_dt("2026-06-08T10:55:00Z"),
-            snippet="Draft BL attached for TGHU7654321.",
-            body_text="Draft BL for review.",
+            snippet="Đã đính kèm bản nháp vận đơn cho TGHU7654321.",
+            body_text="Bản nháp vận đơn gửi để kiểm tra.",
             raw_labels=["INBOX", "DOCS"],
             has_pdf_attachments=True,
             attachments=[
@@ -569,11 +581,11 @@ def build_demo_payloads(
                 ),
                 IngestFactRequest(
                     field_name="status_text",
-                    field_value="Draft BL received",
-                    normalized_value="Draft BL received",
+                    field_value="Đã nhận bản nháp vận đơn",
+                    normalized_value="Đã nhận bản nháp vận đơn",
                     container_no="TGHU7654321",
                     source_type="email_body",
-                    source_label="Draft BL for review.",
+                    source_label="Bản nháp vận đơn gửi để kiểm tra.",
                     document_type="draft_bl",
                     confidence=Decimal("0.9400"),
                 ),
@@ -588,8 +600,8 @@ def build_demo_payloads(
             from_email="release@forwarder-demo.com",
             to_emails=["account@agentify.vn"],
             sent_at=_dt("2026-06-08T13:20:00Z"),
-            snippet="Delivery order released for OOLU9988776.",
-            body_text="Delivery order released after payment confirmation.",
+            snippet="Đã phát hành lệnh giao hàng cho OOLU9988776.",
+            body_text="Lệnh giao hàng đã được phát hành sau khi xác nhận thanh toán.",
             raw_labels=["INBOX", "RELEASE"],
             has_pdf_attachments=True,
             attachments=[
@@ -606,7 +618,7 @@ def build_demo_payloads(
                         "Booking No: BKG-55678\n"
                         "B/L No: EMCNSZX26061199\n"
                         "POD: Cat Lai\n"
-                        "Status: Delivery order released"
+                        "Status: Da phat hanh lenh giao hang"
                     ),
                     document_type="delivery_order",
                 )
@@ -657,14 +669,866 @@ def build_demo_payloads(
                 ),
                 IngestFactRequest(
                     field_name="status_text",
-                    field_value="Delivery order released",
-                    normalized_value="Delivery order released",
+                    field_value="Đã phát hành lệnh giao hàng",
+                    normalized_value="Đã phát hành lệnh giao hàng",
                     container_no="OOLU9988776",
                     source_type="pdf_text",
-                    source_label="Status: Delivery order released",
+                    source_label="Status: Da phat hanh lenh giao hang",
                     document_type="delivery_order",
                     confidence=Decimal("0.9600"),
                     attachment_filename="delivery_order_oolu9988776.pdf",
+                ),
+            ],
+        ),
+        ProcessedEmailIngestRequest(
+            gmail_connection_id=gmail_connection_id,
+            sync_job_id=sync_job_id,
+            gmail_message_id="demo-msg-007",
+            gmail_thread_id="demo-thread-004",
+            subject="Booking Note - WHLU4455667",
+            from_email="ops@carrier-demo.com",
+            to_emails=["ops@agentify.vn"],
+            sent_at=_dt("2026-06-09T02:20:00Z"),
+            snippet="Đã nhận booking note cho WHLU4455667, chưa thấy ETA.",
+            body_text="Container WHLU4455667 đã có booking. Chưa có ETA và chưa có B/L.",
+            raw_labels=["INBOX", "LOGISTICS"],
+            has_pdf_attachments=True,
+            attachments=[
+                IngestAttachmentRequest(
+                    gmail_attachment_id="demo-att-007",
+                    filename="booking_note_whlu4455667.pdf",
+                    mime_type="application/pdf",
+                    size_bytes=118_210,
+                    storage_path="/demo/booking_note_whlu4455667.pdf",
+                    is_text_pdf=True,
+                    text_extract_status="extracted",
+                    extracted_text=(
+                        "Container No: WHLU4455667\n"
+                        "Booking No: BKG-77220\n"
+                        "POL: Yantian\n"
+                        "POD: Hai Phong\n"
+                        "Status: Dang cho hang tau cap ETA"
+                    ),
+                    document_type="booking_confirmation",
+                )
+            ],
+            extracted_facts=[
+                IngestFactRequest(
+                    field_name="container_no",
+                    field_value="WHLU4455667",
+                    normalized_value="WHLU4455667",
+                    container_no="WHLU4455667",
+                    source_type="email_subject",
+                    source_label="Booking Note - WHLU4455667",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9900"),
+                ),
+                IngestFactRequest(
+                    field_name="booking_no",
+                    field_value="BKG-77220",
+                    normalized_value="BKG-77220",
+                    container_no="WHLU4455667",
+                    source_type="pdf_text",
+                    source_label="Booking No: BKG-77220",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9700"),
+                    attachment_filename="booking_note_whlu4455667.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="pol",
+                    field_value="Yantian",
+                    normalized_value="Yantian",
+                    container_no="WHLU4455667",
+                    source_type="pdf_text",
+                    source_label="POL: Yantian",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="booking_note_whlu4455667.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="pod",
+                    field_value="Hai Phong",
+                    normalized_value="Hai Phong",
+                    container_no="WHLU4455667",
+                    source_type="pdf_text",
+                    source_label="POD: Hai Phong",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="booking_note_whlu4455667.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="status_text",
+                    field_value="Đang chờ hãng tàu cấp ETA",
+                    normalized_value="Đang chờ hãng tàu cấp ETA",
+                    container_no="WHLU4455667",
+                    source_type="pdf_text",
+                    source_label="Status: Dang cho hang tau cap ETA",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9500"),
+                    attachment_filename="booking_note_whlu4455667.pdf",
+                ),
+            ],
+        ),
+        ProcessedEmailIngestRequest(
+            gmail_connection_id=gmail_connection_id,
+            sync_job_id=sync_job_id,
+            gmail_message_id="demo-msg-008",
+            gmail_thread_id="demo-thread-005",
+            subject="Booking Request Received - CAIU7788990",
+            from_email="sales@shipper-demo.com",
+            to_emails=["cs@agentify.vn"],
+            sent_at=_dt("2026-06-09T03:05:00Z"),
+            snippet="Mới nhận email booking cho CAIU7788990, chưa có file đính kèm.",
+            body_text=(
+                "Khách vừa gửi yêu cầu đặt chỗ cho container CAIU7788990. "
+                "Chỉ mới nhận email đặt chỗ, chưa có file PDF."
+            ),
+            raw_labels=["INBOX", "LOGISTICS"],
+            has_pdf_attachments=False,
+            attachments=[],
+            extracted_facts=[
+                IngestFactRequest(
+                    field_name="container_no",
+                    field_value="CAIU7788990",
+                    normalized_value="CAIU7788990",
+                    container_no="CAIU7788990",
+                    source_type="email_subject",
+                    source_label="Booking Request Received - CAIU7788990",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9900"),
+                ),
+                IngestFactRequest(
+                    field_name="status_text",
+                    field_value="Chỉ mới nhận email đặt chỗ, chưa có file PDF",
+                    normalized_value="Chỉ mới nhận email đặt chỗ, chưa có file PDF",
+                    container_no="CAIU7788990",
+                    source_type="email_body",
+                    source_label="Chỉ mới nhận email đặt chỗ, chưa có file PDF.",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9200"),
+                ),
+            ],
+        ),
+        ProcessedEmailIngestRequest(
+            gmail_connection_id=gmail_connection_id,
+            sync_job_id=sync_job_id,
+            gmail_message_id="demo-msg-009",
+            gmail_thread_id="demo-thread-006",
+            subject="Booking Confirmation - SEGU5566778 - BKG-66001",
+            from_email="booking@one-demo.com",
+            to_emails=["ops@agentify.vn"],
+            sent_at=_dt("2026-06-06T07:50:00Z"),
+            snippet="Đã xác nhận booking cho SEGU5566778.",
+            body_text="Container SEGU5566778 đã được đặt chỗ, ETD dự kiến ngày 08/06.",
+            raw_labels=["INBOX", "LOGISTICS"],
+            has_pdf_attachments=True,
+            attachments=[
+                IngestAttachmentRequest(
+                    gmail_attachment_id="demo-att-008",
+                    filename="booking_confirmation_segu5566778.pdf",
+                    mime_type="application/pdf",
+                    size_bytes=145_920,
+                    storage_path="/demo/booking_confirmation_segu5566778.pdf",
+                    is_text_pdf=True,
+                    text_extract_status="extracted",
+                    extracted_text=(
+                        "Container No: SEGU5566778\n"
+                        "Booking No: BKG-66001\n"
+                        "POL: Shekou\n"
+                        "POD: Cat Lai\n"
+                        "ETD: 2026-06-08\n"
+                        "Vessel/Voyage: ONE INTEGRITY / 031S"
+                    ),
+                    document_type="booking_confirmation",
+                )
+            ],
+            extracted_facts=[
+                IngestFactRequest(
+                    field_name="container_no",
+                    field_value="SEGU5566778",
+                    normalized_value="SEGU5566778",
+                    container_no="SEGU5566778",
+                    source_type="email_subject",
+                    source_label="Booking Confirmation - SEGU5566778 - BKG-66001",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9900"),
+                ),
+                IngestFactRequest(
+                    field_name="booking_no",
+                    field_value="BKG-66001",
+                    normalized_value="BKG-66001",
+                    container_no="SEGU5566778",
+                    source_type="pdf_text",
+                    source_label="Booking No: BKG-66001",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9800"),
+                    attachment_filename="booking_confirmation_segu5566778.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="pol",
+                    field_value="Shekou",
+                    normalized_value="Shekou",
+                    container_no="SEGU5566778",
+                    source_type="pdf_text",
+                    source_label="POL: Shekou",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="booking_confirmation_segu5566778.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="pod",
+                    field_value="Cat Lai",
+                    normalized_value="Cat Lai",
+                    container_no="SEGU5566778",
+                    source_type="pdf_text",
+                    source_label="POD: Cat Lai",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="booking_confirmation_segu5566778.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="etd",
+                    field_value="2026-06-08",
+                    normalized_value="2026-06-08",
+                    container_no="SEGU5566778",
+                    source_type="pdf_text",
+                    source_label="ETD: 2026-06-08",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="booking_confirmation_segu5566778.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="vessel",
+                    field_value="ONE INTEGRITY",
+                    normalized_value="ONE INTEGRITY",
+                    container_no="SEGU5566778",
+                    source_type="pdf_text",
+                    source_label="Vessel/Voyage: ONE INTEGRITY / 031S",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="booking_confirmation_segu5566778.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="voyage",
+                    field_value="031S",
+                    normalized_value="031S",
+                    container_no="SEGU5566778",
+                    source_type="pdf_text",
+                    source_label="Vessel/Voyage: ONE INTEGRITY / 031S",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="booking_confirmation_segu5566778.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="status_text",
+                    field_value="Đã xác nhận booking, chờ thông báo hàng đến",
+                    normalized_value="Đã xác nhận booking, chờ thông báo hàng đến",
+                    container_no="SEGU5566778",
+                    source_type="email_body",
+                    source_label="Container SEGU5566778 đã được đặt chỗ, ETD dự kiến ngày 08/06.",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9400"),
+                ),
+            ],
+        ),
+        ProcessedEmailIngestRequest(
+            gmail_connection_id=gmail_connection_id,
+            sync_job_id=sync_job_id,
+            gmail_message_id="demo-msg-010",
+            gmail_thread_id="demo-thread-006",
+            subject="Arrival Notice - SEGU5566778 - ETA 2026-06-13",
+            from_email="arrival@one-demo.com",
+            to_emails=["cs@agentify.vn"],
+            sent_at=_dt("2026-06-09T04:15:00Z"),
+            snippet="Thông báo hàng đến cho SEGU5566778, ETA ngày 13/06.",
+            body_text="SEGU5566778 đã có thông báo hàng đến, ETA hiện là ngày 13/06.",
+            raw_labels=["INBOX", "ARRIVAL"],
+            has_pdf_attachments=True,
+            attachments=[
+                IngestAttachmentRequest(
+                    gmail_attachment_id="demo-att-009",
+                    filename="arrival_notice_segu5566778.pdf",
+                    mime_type="application/pdf",
+                    size_bytes=132_884,
+                    storage_path="/demo/arrival_notice_segu5566778.pdf",
+                    is_text_pdf=True,
+                    text_extract_status="extracted",
+                    extracted_text=(
+                        "Container No: SEGU5566778\n"
+                        "ETA: 2026-06-13\n"
+                        "B/L No: ONECATL26061355\n"
+                        "Status: Da nhan thong bao hang den"
+                    ),
+                    document_type="arrival_notice",
+                )
+            ],
+            extracted_facts=[
+                IngestFactRequest(
+                    field_name="container_no",
+                    field_value="SEGU5566778",
+                    normalized_value="SEGU5566778",
+                    container_no="SEGU5566778",
+                    source_type="email_subject",
+                    source_label="Arrival Notice - SEGU5566778 - ETA 2026-06-13",
+                    document_type="arrival_notice",
+                    confidence=Decimal("0.9900"),
+                ),
+                IngestFactRequest(
+                    field_name="eta",
+                    field_value="2026-06-13",
+                    normalized_value="2026-06-13",
+                    container_no="SEGU5566778",
+                    source_type="pdf_text",
+                    source_label="ETA: 2026-06-13",
+                    document_type="arrival_notice",
+                    confidence=Decimal("0.9800"),
+                    attachment_filename="arrival_notice_segu5566778.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="bl_no",
+                    field_value="ONECATL26061355",
+                    normalized_value="ONECATL26061355",
+                    container_no="SEGU5566778",
+                    source_type="pdf_text",
+                    source_label="B/L No: ONECATL26061355",
+                    document_type="arrival_notice",
+                    confidence=Decimal("0.9700"),
+                    attachment_filename="arrival_notice_segu5566778.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="status_text",
+                    field_value="Đã nhận thông báo hàng đến",
+                    normalized_value="Đã nhận thông báo hàng đến",
+                    container_no="SEGU5566778",
+                    source_type="pdf_text",
+                    source_label="Status: Da nhan thong bao hang den",
+                    document_type="arrival_notice",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="arrival_notice_segu5566778.pdf",
+                ),
+            ],
+        ),
+        ProcessedEmailIngestRequest(
+            gmail_connection_id=gmail_connection_id,
+            sync_job_id=sync_job_id,
+            gmail_message_id="demo-msg-011",
+            gmail_thread_id="demo-thread-007",
+            subject="Delivery Order Advice - TRHU3344556",
+            from_email="release@forwarder-demo.com",
+            to_emails=["account@agentify.vn"],
+            sent_at=_dt("2026-06-09T06:40:00Z"),
+            snippet="Đã có lệnh giao hàng cho TRHU3344556.",
+            body_text="TRHU3344556 đã có lệnh giao hàng, nhưng chưa thấy booking và ETA.",
+            raw_labels=["INBOX", "RELEASE"],
+            has_pdf_attachments=True,
+            attachments=[
+                IngestAttachmentRequest(
+                    gmail_attachment_id="demo-att-010",
+                    filename="delivery_order_trhu3344556.pdf",
+                    mime_type="application/pdf",
+                    size_bytes=121_330,
+                    storage_path="/demo/delivery_order_trhu3344556.pdf",
+                    is_text_pdf=True,
+                    text_extract_status="extracted",
+                    extracted_text=(
+                        "Container No: TRHU3344556\n"
+                        "B/L No: SITGN26061118\n"
+                        "POD: Da Nang\n"
+                        "Status: Da co lenh giao hang"
+                    ),
+                    document_type="delivery_order",
+                )
+            ],
+            extracted_facts=[
+                IngestFactRequest(
+                    field_name="container_no",
+                    field_value="TRHU3344556",
+                    normalized_value="TRHU3344556",
+                    container_no="TRHU3344556",
+                    source_type="email_subject",
+                    source_label="Delivery Order Advice - TRHU3344556",
+                    document_type="delivery_order",
+                    confidence=Decimal("0.9900"),
+                ),
+                IngestFactRequest(
+                    field_name="bl_no",
+                    field_value="SITGN26061118",
+                    normalized_value="SITGN26061118",
+                    container_no="TRHU3344556",
+                    source_type="pdf_text",
+                    source_label="B/L No: SITGN26061118",
+                    document_type="delivery_order",
+                    confidence=Decimal("0.9700"),
+                    attachment_filename="delivery_order_trhu3344556.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="pod",
+                    field_value="Da Nang",
+                    normalized_value="Da Nang",
+                    container_no="TRHU3344556",
+                    source_type="pdf_text",
+                    source_label="POD: Da Nang",
+                    document_type="delivery_order",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="delivery_order_trhu3344556.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="status_text",
+                    field_value="Đã có lệnh giao hàng, chưa thấy booking và ETA",
+                    normalized_value="Đã có lệnh giao hàng, chưa thấy booking và ETA",
+                    container_no="TRHU3344556",
+                    source_type="email_body",
+                    source_label="TRHU3344556 đã có lệnh giao hàng, nhưng chưa thấy booking và ETA.",
+                    document_type="delivery_order",
+                    confidence=Decimal("0.9500"),
+                ),
+            ],
+        ),
+        ProcessedEmailIngestRequest(
+            gmail_connection_id=gmail_connection_id,
+            sync_job_id=sync_job_id,
+            gmail_message_id="demo-msg-012",
+            gmail_thread_id="demo-thread-008",
+            subject="Booking Confirmation - FSCU2211334 - BKG-99001",
+            from_email="booking@maersk-demo.com",
+            to_emails=["ops@agentify.vn"],
+            sent_at=_dt("2026-06-08T06:25:00Z"),
+            snippet="Đã xác nhận booking đầy đủ cho FSCU2211334.",
+            body_text="Container FSCU2211334 đã được xác nhận booking, chờ tàu chạy.",
+            raw_labels=["INBOX", "LOGISTICS"],
+            has_pdf_attachments=True,
+            attachments=[
+                IngestAttachmentRequest(
+                    gmail_attachment_id="demo-att-011",
+                    filename="booking_confirmation_fscu2211334.pdf",
+                    mime_type="application/pdf",
+                    size_bytes=201_105,
+                    storage_path="/demo/booking_confirmation_fscu2211334.pdf",
+                    is_text_pdf=True,
+                    text_extract_status="extracted",
+                    extracted_text=(
+                        "Container No: FSCU2211334\n"
+                        "Booking No: BKG-99001\n"
+                        "PO No: 450077889\n"
+                        "Seal No: SL332211\n"
+                        "POL: Shanghai\n"
+                        "POD: Cat Lai\n"
+                        "Vessel/Voyage: MAERSK SAIGON / 028S\n"
+                        "ETD: 2026-06-08"
+                    ),
+                    document_type="booking_confirmation",
+                )
+            ],
+            extracted_facts=[
+                IngestFactRequest(
+                    field_name="container_no",
+                    field_value="FSCU2211334",
+                    normalized_value="FSCU2211334",
+                    container_no="FSCU2211334",
+                    source_type="email_subject",
+                    source_label="Booking Confirmation - FSCU2211334 - BKG-99001",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9900"),
+                ),
+                IngestFactRequest(
+                    field_name="booking_no",
+                    field_value="BKG-99001",
+                    normalized_value="BKG-99001",
+                    container_no="FSCU2211334",
+                    source_type="pdf_text",
+                    source_label="Booking No: BKG-99001",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9800"),
+                    attachment_filename="booking_confirmation_fscu2211334.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="po_no",
+                    field_value="450077889",
+                    normalized_value="450077889",
+                    container_no="FSCU2211334",
+                    source_type="pdf_text",
+                    source_label="PO No: 450077889",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9700"),
+                    attachment_filename="booking_confirmation_fscu2211334.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="seal_no",
+                    field_value="SL332211",
+                    normalized_value="SL332211",
+                    container_no="FSCU2211334",
+                    source_type="pdf_text",
+                    source_label="Seal No: SL332211",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9700"),
+                    attachment_filename="booking_confirmation_fscu2211334.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="pol",
+                    field_value="Shanghai",
+                    normalized_value="Shanghai",
+                    container_no="FSCU2211334",
+                    source_type="pdf_text",
+                    source_label="POL: Shanghai",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="booking_confirmation_fscu2211334.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="pod",
+                    field_value="Cat Lai",
+                    normalized_value="Cat Lai",
+                    container_no="FSCU2211334",
+                    source_type="pdf_text",
+                    source_label="POD: Cat Lai",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="booking_confirmation_fscu2211334.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="vessel",
+                    field_value="MAERSK SAIGON",
+                    normalized_value="MAERSK SAIGON",
+                    container_no="FSCU2211334",
+                    source_type="pdf_text",
+                    source_label="Vessel/Voyage: MAERSK SAIGON / 028S",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="booking_confirmation_fscu2211334.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="voyage",
+                    field_value="028S",
+                    normalized_value="028S",
+                    container_no="FSCU2211334",
+                    source_type="pdf_text",
+                    source_label="Vessel/Voyage: MAERSK SAIGON / 028S",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="booking_confirmation_fscu2211334.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="etd",
+                    field_value="2026-06-08",
+                    normalized_value="2026-06-08",
+                    container_no="FSCU2211334",
+                    source_type="pdf_text",
+                    source_label="ETD: 2026-06-08",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="booking_confirmation_fscu2211334.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="status_text",
+                    field_value="Chờ tàu khởi hành theo lịch dự kiến",
+                    normalized_value="Chờ tàu khởi hành theo lịch dự kiến",
+                    container_no="FSCU2211334",
+                    source_type="email_body",
+                    source_label="Container FSCU2211334 đã được xác nhận booking, chờ tàu chạy.",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9500"),
+                ),
+            ],
+        ),
+        ProcessedEmailIngestRequest(
+            gmail_connection_id=gmail_connection_id,
+            sync_job_id=sync_job_id,
+            gmail_message_id="demo-msg-013",
+            gmail_thread_id="demo-thread-008",
+            subject="Arrival Notice - FSCU2211334 - ETA 2026-06-12",
+            from_email="arrival@maersk-demo.com",
+            to_emails=["cs@agentify.vn"],
+            sent_at=_dt("2026-06-09T07:15:00Z"),
+            snippet="FSCU2211334 đang vận chuyển, ETA ngày 12/06.",
+            body_text="Tàu đang vận chuyển về cảng đích, ETA hiện tại là ngày 12/06.",
+            raw_labels=["INBOX", "ARRIVAL"],
+            has_pdf_attachments=True,
+            attachments=[
+                IngestAttachmentRequest(
+                    gmail_attachment_id="demo-att-012",
+                    filename="arrival_notice_fscu2211334.pdf",
+                    mime_type="application/pdf",
+                    size_bytes=151_220,
+                    storage_path="/demo/arrival_notice_fscu2211334.pdf",
+                    is_text_pdf=True,
+                    text_extract_status="extracted",
+                    extracted_text=(
+                        "Container No: FSCU2211334\n"
+                        "B/L No: MAEU260612345\n"
+                        "ETA: 2026-06-12\n"
+                        "Status: Dang van chuyen ve cang dich"
+                    ),
+                    document_type="arrival_notice",
+                )
+            ],
+            extracted_facts=[
+                IngestFactRequest(
+                    field_name="container_no",
+                    field_value="FSCU2211334",
+                    normalized_value="FSCU2211334",
+                    container_no="FSCU2211334",
+                    source_type="email_subject",
+                    source_label="Arrival Notice - FSCU2211334 - ETA 2026-06-12",
+                    document_type="arrival_notice",
+                    confidence=Decimal("0.9900"),
+                ),
+                IngestFactRequest(
+                    field_name="bl_no",
+                    field_value="MAEU260612345",
+                    normalized_value="MAEU260612345",
+                    container_no="FSCU2211334",
+                    source_type="pdf_text",
+                    source_label="B/L No: MAEU260612345",
+                    document_type="arrival_notice",
+                    confidence=Decimal("0.9800"),
+                    attachment_filename="arrival_notice_fscu2211334.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="eta",
+                    field_value="2026-06-12",
+                    normalized_value="2026-06-12",
+                    container_no="FSCU2211334",
+                    source_type="pdf_text",
+                    source_label="ETA: 2026-06-12",
+                    document_type="arrival_notice",
+                    confidence=Decimal("0.9800"),
+                    attachment_filename="arrival_notice_fscu2211334.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="status_text",
+                    field_value="Đang vận chuyển về cảng đích",
+                    normalized_value="Đang vận chuyển về cảng đích",
+                    container_no="FSCU2211334",
+                    source_type="pdf_text",
+                    source_label="Status: Dang van chuyen ve cang dich",
+                    document_type="arrival_notice",
+                    confidence=Decimal("0.9700"),
+                    attachment_filename="arrival_notice_fscu2211334.pdf",
+                ),
+            ],
+        ),
+        ProcessedEmailIngestRequest(
+            gmail_connection_id=gmail_connection_id,
+            sync_job_id=sync_job_id,
+            gmail_message_id="demo-msg-014",
+            gmail_thread_id="demo-thread-009",
+            subject="Export Schedule - CMAU6677889 - ETD 2026-06-11",
+            from_email="booking@carrier-demo.com",
+            to_emails=["ops@agentify.vn"],
+            sent_at=_dt("2026-06-09T07:40:00Z"),
+            snippet="CMAU6677889 đang chờ xuất cảng theo lịch ngày 11/06.",
+            body_text="Container CMAU6677889 đang chờ xuất cảng, chưa có B/L và ETA.",
+            raw_labels=["INBOX", "LOGISTICS"],
+            has_pdf_attachments=True,
+            attachments=[
+                IngestAttachmentRequest(
+                    gmail_attachment_id="demo-att-013",
+                    filename="export_schedule_cmau6677889.pdf",
+                    mime_type="application/pdf",
+                    size_bytes=133_540,
+                    storage_path="/demo/export_schedule_cmau6677889.pdf",
+                    is_text_pdf=True,
+                    text_extract_status="extracted",
+                    extracted_text=(
+                        "Container No: CMAU6677889\n"
+                        "Booking No: BKG-77110\n"
+                        "POL: Qingdao\n"
+                        "POD: Ho Chi Minh\n"
+                        "Vessel/Voyage: TSL HAI PHONG / 018S\n"
+                        "ETD: 2026-06-11\n"
+                        "Status: Cho xuat cang"
+                    ),
+                    document_type="booking_confirmation",
+                )
+            ],
+            extracted_facts=[
+                IngestFactRequest(
+                    field_name="container_no",
+                    field_value="CMAU6677889",
+                    normalized_value="CMAU6677889",
+                    container_no="CMAU6677889",
+                    source_type="email_subject",
+                    source_label="Export Schedule - CMAU6677889 - ETD 2026-06-11",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9900"),
+                ),
+                IngestFactRequest(
+                    field_name="booking_no",
+                    field_value="BKG-77110",
+                    normalized_value="BKG-77110",
+                    container_no="CMAU6677889",
+                    source_type="pdf_text",
+                    source_label="Booking No: BKG-77110",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9700"),
+                    attachment_filename="export_schedule_cmau6677889.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="pol",
+                    field_value="Qingdao",
+                    normalized_value="Qingdao",
+                    container_no="CMAU6677889",
+                    source_type="pdf_text",
+                    source_label="POL: Qingdao",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="export_schedule_cmau6677889.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="pod",
+                    field_value="Ho Chi Minh",
+                    normalized_value="Ho Chi Minh",
+                    container_no="CMAU6677889",
+                    source_type="pdf_text",
+                    source_label="POD: Ho Chi Minh",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="export_schedule_cmau6677889.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="vessel",
+                    field_value="TSL HAI PHONG",
+                    normalized_value="TSL HAI PHONG",
+                    container_no="CMAU6677889",
+                    source_type="pdf_text",
+                    source_label="Vessel/Voyage: TSL HAI PHONG / 018S",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="export_schedule_cmau6677889.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="voyage",
+                    field_value="018S",
+                    normalized_value="018S",
+                    container_no="CMAU6677889",
+                    source_type="pdf_text",
+                    source_label="Vessel/Voyage: TSL HAI PHONG / 018S",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="export_schedule_cmau6677889.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="etd",
+                    field_value="2026-06-11",
+                    normalized_value="2026-06-11",
+                    container_no="CMAU6677889",
+                    source_type="pdf_text",
+                    source_label="ETD: 2026-06-11",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="export_schedule_cmau6677889.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="status_text",
+                    field_value="Chờ xuất cảng",
+                    normalized_value="Chờ xuất cảng",
+                    container_no="CMAU6677889",
+                    source_type="pdf_text",
+                    source_label="Status: Cho xuat cang",
+                    document_type="booking_confirmation",
+                    confidence=Decimal("0.9500"),
+                    attachment_filename="export_schedule_cmau6677889.pdf",
+                ),
+            ],
+        ),
+        ProcessedEmailIngestRequest(
+            gmail_connection_id=gmail_connection_id,
+            sync_job_id=sync_job_id,
+            gmail_message_id="demo-msg-015",
+            gmail_thread_id="demo-thread-010",
+            subject="Customs Update - TEMU5544332",
+            from_email="docs@forwarder-demo.com",
+            to_emails=["cs@agentify.vn"],
+            sent_at=_dt("2026-06-09T08:20:00Z"),
+            snippet="TEMU5544332 đang chờ thông quan để lấy lệnh giao hàng.",
+            body_text="Container TEMU5544332 đã đến cảng, đang chờ thông quan để lấy lệnh giao hàng.",
+            raw_labels=["INBOX", "DOCS"],
+            has_pdf_attachments=True,
+            attachments=[
+                IngestAttachmentRequest(
+                    gmail_attachment_id="demo-att-014",
+                    filename="customs_update_temu5544332.pdf",
+                    mime_type="application/pdf",
+                    size_bytes=129_660,
+                    storage_path="/demo/customs_update_temu5544332.pdf",
+                    is_text_pdf=True,
+                    text_extract_status="extracted",
+                    extracted_text=(
+                        "Container No: TEMU5544332\n"
+                        "Booking No: BKG-88012\n"
+                        "B/L No: TSLHPH26061588\n"
+                        "POD: Hai Phong\n"
+                        "ETA: 2026-06-15\n"
+                        "Status: Cho thong quan de lay lenh giao hang"
+                    ),
+                    document_type="arrival_notice",
+                )
+            ],
+            extracted_facts=[
+                IngestFactRequest(
+                    field_name="container_no",
+                    field_value="TEMU5544332",
+                    normalized_value="TEMU5544332",
+                    container_no="TEMU5544332",
+                    source_type="email_subject",
+                    source_label="Customs Update - TEMU5544332",
+                    document_type="arrival_notice",
+                    confidence=Decimal("0.9900"),
+                ),
+                IngestFactRequest(
+                    field_name="booking_no",
+                    field_value="BKG-88012",
+                    normalized_value="BKG-88012",
+                    container_no="TEMU5544332",
+                    source_type="pdf_text",
+                    source_label="Booking No: BKG-88012",
+                    document_type="arrival_notice",
+                    confidence=Decimal("0.9700"),
+                    attachment_filename="customs_update_temu5544332.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="bl_no",
+                    field_value="TSLHPH26061588",
+                    normalized_value="TSLHPH26061588",
+                    container_no="TEMU5544332",
+                    source_type="pdf_text",
+                    source_label="B/L No: TSLHPH26061588",
+                    document_type="arrival_notice",
+                    confidence=Decimal("0.9700"),
+                    attachment_filename="customs_update_temu5544332.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="pod",
+                    field_value="Hai Phong",
+                    normalized_value="Hai Phong",
+                    container_no="TEMU5544332",
+                    source_type="pdf_text",
+                    source_label="POD: Hai Phong",
+                    document_type="arrival_notice",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="customs_update_temu5544332.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="eta",
+                    field_value="2026-06-15",
+                    normalized_value="2026-06-15",
+                    container_no="TEMU5544332",
+                    source_type="pdf_text",
+                    source_label="ETA: 2026-06-15",
+                    document_type="arrival_notice",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="customs_update_temu5544332.pdf",
+                ),
+                IngestFactRequest(
+                    field_name="status_text",
+                    field_value="Chờ thông quan để lấy lệnh giao hàng",
+                    normalized_value="Chờ thông quan để lấy lệnh giao hàng",
+                    container_no="TEMU5544332",
+                    source_type="pdf_text",
+                    source_label="Status: Cho thong quan de lay lenh giao hang",
+                    document_type="arrival_notice",
+                    confidence=Decimal("0.9600"),
+                    attachment_filename="customs_update_temu5544332.pdf",
                 ),
             ],
         ),
@@ -813,7 +1677,7 @@ async def _delete_demo_only(session) -> None:
             """
         )
         ,
-        {"container_nos": ["MSCU1234567", "TGHU7654321", "OOLU9988776"]},
+        {"container_nos": DEMO_CONTAINER_NOS},
     )
 
 
@@ -831,7 +1695,7 @@ async def seed_demo_data(truncate: bool) -> dict[str, int]:
             connection.id,
             email_count=len(payloads),
             attachment_count=sum(len(payload.attachments) for payload in payloads),
-            container_count=3,
+            container_count=len(DEMO_CONTAINER_NOS),
         )
 
         for payload in payloads:
@@ -846,7 +1710,7 @@ async def seed_demo_data(truncate: bool) -> dict[str, int]:
             "sync_jobs": 2,
             "emails": len(payloads),
             "attachments": sum(len(payload.attachments) for payload in payloads),
-            "containers": 3,
+            "containers": len(DEMO_CONTAINER_NOS),
             "container_facts": sum(len(payload.extracted_facts) for payload in payloads),
         }
 

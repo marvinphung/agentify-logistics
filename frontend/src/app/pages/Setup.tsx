@@ -13,6 +13,10 @@ import {
   upsertGmailConnection,
 } from '../lib/agentify-api';
 import { formatDateTime } from '../lib/format';
+import {
+  getConnectionStatusLabel,
+  getSyncJobStatusLabel,
+} from '../lib/logistics-labels';
 import type {
   AppHomeResponse,
   EmailListItem,
@@ -130,7 +134,7 @@ export function Setup() {
   async function handleCreateJob(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedConnectionId) {
-      setError('Cần chọn mailbox trước khi tạo sync job.');
+      setError('Cần chọn hộp thư trước khi tạo lần đồng bộ.');
       return;
     }
 
@@ -143,10 +147,10 @@ export function Setup() {
         query,
         max_results: maxResults,
       });
-      setSuccess(`Đã tạo sync job ${job.id}.`);
+      setSuccess(`Đã tạo lần đồng bộ ${job.id}.`);
       await loadPage(selectedConnectionId);
     } catch (createError) {
-      setError(createError instanceof Error ? createError.message : 'Không tạo được sync job.');
+      setError(createError instanceof Error ? createError.message : 'Không tạo được lần đồng bộ.');
     } finally {
       setIsCreatingJob(false);
     }
@@ -159,14 +163,14 @@ export function Setup() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">
-                Data setup
+                Màn thiết lập kỹ thuật
               </p>
               <h1 className="mt-3 text-4xl font-semibold tracking-[-0.04em] text-slate-900">
                 Thiết lập dữ liệu
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
-                Toàn bộ phần kỹ thuật được gom vào đây: mailbox, sync job, email đã ingest và
-                trạng thái backend. User hằng ngày không cần ở màn này lâu.
+                Toàn bộ phần kỹ thuật được gom vào đây: hộp thư Gmail, lần đồng bộ, email đã đưa
+                vào hệ thống và trạng thái backend. Người dùng hằng ngày không cần ở màn này lâu.
               </p>
             </div>
             <button
@@ -197,7 +201,7 @@ export function Setup() {
             <div className="rounded-[28px] border border-slate-200 bg-white p-6">
               <div className="flex items-center gap-2">
                 <Mail className="h-5 w-5 text-slate-500" />
-                <h2 className="text-xl font-semibold text-slate-900">Kết nối mailbox</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Kết nối hộp thư</h2>
               </div>
               <form className="mt-5 space-y-4" onSubmit={handleSaveMailbox}>
                 <div>
@@ -226,7 +230,7 @@ export function Setup() {
                   disabled={isSaving}
                   className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-60"
                 >
-                  {isSaving ? 'Đang lưu...' : 'Lưu mailbox'}
+                  {isSaving ? 'Đang lưu...' : 'Lưu hộp thư'}
                 </button>
               </form>
 
@@ -237,37 +241,37 @@ export function Setup() {
                       <div>
                         <p className="font-medium text-slate-900">{connection.account_email}</p>
                         <p className="text-sm text-slate-500">
-                          {connection.display_name || 'Chưa có display name'}
+                          {connection.display_name || 'Chưa có tên hiển thị'}
                         </p>
                       </div>
                       <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
-                        {connection.status}
+                        {getConnectionStatusLabel(connection.status)}
                       </span>
                     </div>
                     <p className="mt-3 text-xs text-slate-500">
-                      Last sync: {formatDateTime(connection.last_synced_at)}
+                      Đồng bộ gần nhất: {formatDateTime(connection.last_synced_at)}
                     </p>
                   </div>
                 ))}
                 {!isLoading && connections.length === 0 ? (
                   <div className="rounded-[20px] border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-                    Chưa có mailbox nào trong backend.
+                    Chưa có hộp thư nào trong backend.
                   </div>
                 ) : null}
               </div>
             </div>
 
             <div className="rounded-[28px] border border-slate-200 bg-white p-6">
-              <h2 className="text-xl font-semibold text-slate-900">Tạo sync job</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Tạo lần đồng bộ</h2>
               <form className="mt-5 space-y-4" onSubmit={handleCreateJob}>
                 <div>
-                  <label className="mb-2 block text-sm text-slate-600">Mailbox</label>
+                  <label className="mb-2 block text-sm text-slate-600">Hộp thư</label>
                   <select
                     value={selectedConnectionId}
                     onChange={(event) => setSelectedConnectionId(event.target.value)}
                     className="h-12 w-full rounded-2xl border border-slate-200 bg-[#fcfbf8] px-4 text-slate-900 outline-none focus:border-slate-900"
                   >
-                    <option value="">Chọn mailbox</option>
+                    <option value="">Chọn hộp thư</option>
                     {connections.map((connection) => (
                       <option key={connection.id} value={connection.id}>
                         {connection.account_email}
@@ -276,7 +280,7 @@ export function Setup() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm text-slate-600">Gmail query</label>
+                  <label className="mb-2 block text-sm text-slate-600">Bộ lọc Gmail</label>
                   <input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
@@ -284,7 +288,7 @@ export function Setup() {
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm text-slate-600">Max results</label>
+                  <label className="mb-2 block text-sm text-slate-600">Số email tối đa</label>
                   <input
                     type="number"
                     min={1}
@@ -299,25 +303,25 @@ export function Setup() {
                   disabled={isCreatingJob}
                   className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-[#c96d42] px-5 text-sm font-medium text-white transition hover:bg-[#b55f39] disabled:opacity-60"
                 >
-                  {isCreatingJob ? 'Đang tạo job...' : 'Tạo sync job'}
+                  {isCreatingJob ? 'Đang tạo...' : 'Tạo lần đồng bộ'}
                 </button>
               </form>
 
               <div className="mt-6 grid grid-cols-3 gap-3">
                 <div className="rounded-[20px] border border-slate-200 bg-[#fcfbf8] p-4">
-                  <p className="text-sm text-slate-500">Attachments</p>
+                  <p className="text-sm text-slate-500">Tệp đính kèm</p>
                   <p className="mt-2 text-xl font-semibold text-slate-900">
                     {stats.attachmentsFound}
                   </p>
                 </div>
                 <div className="rounded-[20px] border border-slate-200 bg-[#fcfbf8] p-4">
-                  <p className="text-sm text-slate-500">PDF text</p>
+                  <p className="text-sm text-slate-500">PDF đọc được chữ</p>
                   <p className="mt-2 text-xl font-semibold text-slate-900">
                     {stats.pdfExtracted}
                   </p>
                 </div>
                 <div className="rounded-[20px] border border-slate-200 bg-[#fcfbf8] p-4">
-                  <p className="text-sm text-slate-500">Containers</p>
+                  <p className="text-sm text-slate-500">Container đã cập nhật</p>
                   <p className="mt-2 text-xl font-semibold text-slate-900">
                     {stats.containersUpserted}
                   </p>
@@ -328,26 +332,26 @@ export function Setup() {
 
           <div className="space-y-6">
             <div className="rounded-[28px] border border-slate-200 bg-white p-6">
-              <h2 className="text-xl font-semibold text-slate-900">Sync jobs gần đây</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Các lần đồng bộ gần đây</h2>
               <div className="mt-5 space-y-3">
                 {jobs.map((job) => (
                   <div key={job.id} className="rounded-[20px] border border-slate-200 bg-[#fcfbf8] p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-medium text-slate-900">{job.query || 'No query'}</p>
+                        <p className="font-medium text-slate-900">{job.query || 'Không có bộ lọc'}</p>
                         <p className="text-sm text-slate-500">
-                          {formatDateTime(job.created_at)} • {job.emails_fetched} emails
+                          {formatDateTime(job.created_at)} • {job.emails_fetched} email
                         </p>
                       </div>
                       <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white">
-                        {job.status}
+                        {getSyncJobStatusLabel(job.status)}
                       </span>
                     </div>
                   </div>
                 ))}
                 {!isLoading && jobs.length === 0 ? (
                   <div className="rounded-[20px] border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-                    Chưa có sync job nào.
+                    Chưa có lần đồng bộ nào.
                   </div>
                 ) : null}
               </div>
@@ -355,7 +359,7 @@ export function Setup() {
 
             <div className="rounded-[28px] border border-slate-200 bg-white p-6">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-xl font-semibold text-slate-900">Email đã ingest</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Email đã đưa vào hệ thống</h2>
                 <Link to="/" className="text-sm font-medium text-slate-700 hover:text-slate-900">
                   Quay lại tra cứu
                 </Link>
@@ -375,7 +379,7 @@ export function Setup() {
                         </p>
                       </div>
                       <span className="rounded-full bg-[#f6f2ea] px-3 py-1 text-xs text-slate-600">
-                        {email.fact_count} facts
+                        {email.fact_count} dữ liệu
                       </span>
                     </div>
                     {email.linked_containers.length > 0 ? (
@@ -394,7 +398,7 @@ export function Setup() {
                 ))}
                 {!isLoading && emails.length === 0 ? (
                   <div className="rounded-[20px] border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-                    Chưa có email nào được ingest.
+                    Chưa có email nào được đưa vào hệ thống.
                   </div>
                 ) : null}
               </div>

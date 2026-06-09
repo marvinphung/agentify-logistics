@@ -3,8 +3,13 @@ import { Link, useParams } from 'react-router';
 import { ArrowLeft, ExternalLink, FileText, Mail, Ship } from 'lucide-react';
 import { getContainer, getContainerFacts } from '../lib/agentify-api';
 import type { ContainerDetailResponse, ContainerFact } from '../types/api';
-import { formatDate, formatDateTime, toTitleCase } from '../lib/format';
+import { formatDate, formatDateTime } from '../lib/format';
 import { buildApiUrl } from '../lib/api';
+import {
+  LOGISTICS_FIELD_LABELS,
+  getDocumentTypeLabel,
+  getLogisticsFieldLabel,
+} from '../lib/logistics-labels';
 
 export function ShipmentDetail() {
   const { containerNo } = useParams();
@@ -87,33 +92,39 @@ export function ShipmentDetail() {
         <div className="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.16em] text-slate-500">Container</p>
+              <p className="text-sm uppercase tracking-[0.16em] text-slate-500">Mã container</p>
               <h1 className="mt-3 font-mono text-4xl font-semibold tracking-[-0.04em] text-slate-900">
                 {container.container_no}
               </h1>
               <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">
-                {container.status_text || 'Chưa có status summary trong DB.'}{' '}
-                Thông tin dưới đây là bản aggregate mới nhất từ email và PDF đã ingest.
+                {container.status_text || 'Chưa có mô tả trạng thái trong dữ liệu hiện tại.'}{' '}
+                Thông tin dưới đây là bản tổng hợp mới nhất từ email và PDF đã đọc vào hệ thống.
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:w-[360px]">
+            <div className="grid gap-3 sm:grid-cols-2 lg:w-[420px]">
               <div className="rounded-[22px] border border-slate-200 bg-[#fcfbf8] p-4">
-                <p className="text-sm text-slate-500">ETA / ETD</p>
-                <p className="mt-2 text-lg font-semibold text-slate-900">
-                  {formatDate(container.eta)} / {formatDate(container.etd)}
+                <p className="text-xs leading-5 text-slate-500">
+                  {LOGISTICS_FIELD_LABELS.eta} / {LOGISTICS_FIELD_LABELS.etd}
                 </p>
+                <div className="mt-2 space-y-1 text-lg font-semibold text-slate-900">
+                  <p>{formatDate(container.eta)}</p>
+                  <p>{formatDate(container.etd)}</p>
+                </div>
               </div>
               <div className="rounded-[22px] border border-slate-200 bg-[#fcfbf8] p-4">
-                <p className="text-sm text-slate-500">POL → POD</p>
-                <p className="mt-2 text-lg font-semibold text-slate-900">
-                  {container.pol || '-'} → {container.pod || '-'}
+                <p className="text-xs leading-5 text-slate-500">
+                  {LOGISTICS_FIELD_LABELS.pol} → {LOGISTICS_FIELD_LABELS.pod}
                 </p>
+                <div className="mt-2 space-y-1 text-lg font-semibold text-slate-900">
+                  <p>{container.pol || '-'}</p>
+                  <p>{container.pod || '-'}</p>
+                </div>
               </div>
               <div className="rounded-[22px] border border-slate-200 bg-[#fcfbf8] p-4">
                 <p className="text-sm text-slate-500">Nguồn dữ liệu</p>
                 <p className="mt-2 text-lg font-semibold text-slate-900">
-                  {container.source_count} facts / {container.attachment_count} files
+                  {container.source_count} dữ liệu / {container.attachment_count} tệp
                 </p>
               </div>
               <div className="rounded-[22px] border border-slate-200 bg-[#fcfbf8] p-4">
@@ -132,35 +143,35 @@ export function ShipmentDetail() {
               <h2 className="text-xl font-semibold text-slate-900">Thông tin chính</h2>
               <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div>
-                  <p className="text-sm text-slate-500">Booking</p>
+                  <p className="text-xs leading-5 text-slate-500">{LOGISTICS_FIELD_LABELS.booking_no}</p>
                   <p className="mt-1 font-mono text-slate-900">{container.booking_no || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">B/L</p>
+                  <p className="text-xs leading-5 text-slate-500">{LOGISTICS_FIELD_LABELS.bl_no}</p>
                   <p className="mt-1 font-mono text-slate-900">{container.bl_no || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">PO</p>
+                  <p className="text-xs leading-5 text-slate-500">{LOGISTICS_FIELD_LABELS.po_no}</p>
                   <p className="mt-1 font-mono text-slate-900">{container.po_no || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">Updated</p>
+                  <p className="text-xs leading-5 text-slate-500">{LOGISTICS_FIELD_LABELS.updated_at}</p>
                   <p className="mt-1 text-slate-900">{formatDateTime(container.updated_at)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">Vessel</p>
+                  <p className="text-xs leading-5 text-slate-500">{LOGISTICS_FIELD_LABELS.vessel}</p>
                   <p className="mt-1 text-slate-900">{container.vessel || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">Voyage</p>
+                  <p className="text-xs leading-5 text-slate-500">{LOGISTICS_FIELD_LABELS.voyage}</p>
                   <p className="mt-1 text-slate-900">{container.voyage || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">POL</p>
+                  <p className="text-xs leading-5 text-slate-500">{LOGISTICS_FIELD_LABELS.pol}</p>
                   <p className="mt-1 text-slate-900">{container.pol || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">POD</p>
+                  <p className="text-xs leading-5 text-slate-500">{LOGISTICS_FIELD_LABELS.pod}</p>
                   <p className="mt-1 text-slate-900">{container.pod || '-'}</p>
                 </div>
               </div>
@@ -169,7 +180,7 @@ export function ShipmentDetail() {
             <div className="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8">
               <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-900">
                 <Ship className="h-5 w-5 text-slate-500" />
-                Source evidence
+                Nguồn dữ liệu đã trích xuất
               </h2>
               <p className="mt-2 text-sm leading-7 text-slate-600">
                 Mỗi field đều giữ lịch sử nguồn để CS/Ops biết giá trị hiện tại đến từ email hoặc
@@ -180,7 +191,9 @@ export function ShipmentDetail() {
                   <div key={fieldName} className="rounded-[24px] border border-slate-200 bg-[#fcfbf8] p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="text-sm text-slate-500">{toTitleCase(fieldName)}</p>
+                        <p className="text-xs leading-5 text-slate-500">
+                          {getLogisticsFieldLabel(fieldName)}
+                        </p>
                         <p className="mt-2 text-lg font-semibold text-slate-900">
                           {fieldFacts[0]?.field_value || '-'}
                         </p>
@@ -197,9 +210,9 @@ export function ShipmentDetail() {
                             <span className="text-slate-500">{formatDateTime(fact.source_sent_at)}</span>
                           </div>
                           <div className="mt-2 flex flex-wrap items-center gap-2 text-slate-500">
-                            <span>{fact.document_type || fact.source_type}</span>
+                            <span>{getDocumentTypeLabel(fact.document_type || fact.source_type)}</span>
                             <span>•</span>
-                            <span>{fact.source_label || 'No source label'}</span>
+                            <span>{fact.source_label || 'Không có nhãn nguồn'}</span>
                             {fact.email_id ? (
                               <>
                                 <span>•</span>
@@ -227,7 +240,7 @@ export function ShipmentDetail() {
             <div className="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8">
               <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-900">
                 <Mail className="h-5 w-5 text-slate-500" />
-                Related emails
+                Email liên quan
               </h2>
               <div className="mt-5 space-y-3">
                 {relatedEmails.map((email) => (
@@ -255,14 +268,14 @@ export function ShipmentDetail() {
             <div className="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8">
               <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-900">
                 <FileText className="h-5 w-5 text-slate-500" />
-                Related attachments
+                Tệp đính kèm liên quan
               </h2>
               <div className="mt-5 space-y-3">
                 {relatedAttachments.map((attachment) => (
                   <div key={attachment.id} className="rounded-[22px] border border-slate-200 bg-[#fcfbf8] p-4">
                     <p className="font-medium text-slate-900">{attachment.filename}</p>
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-                      <span>{attachment.document_type || 'Unknown document type'}</span>
+                      <span>{getDocumentTypeLabel(attachment.document_type)}</span>
                       <span>•</span>
                       <Link to={`/emails/${attachment.email_id}`} className="font-medium text-slate-900 hover:underline">
                         Email nguồn

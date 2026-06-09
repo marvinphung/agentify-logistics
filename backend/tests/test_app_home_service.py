@@ -19,8 +19,14 @@ class AppHomeServiceTest(IsolatedAsyncioTestCase):
         )
         recent_container = SimpleNamespace(
             container_no="MSCU1234567",
-            status_text="Arrival Notice revised",
+            booking_no="BKG-88921",
+            bl_no="HLCUSHA250601234",
+            pod="Hai Phong",
+            etd=date(2026, 6, 6),
+            status_text="ETA đã điều chỉnh do ùn tắc cảng",
             eta=date(2026, 6, 14),
+            source_count=4,
+            attachment_count=3,
             updated_at=datetime(2026, 6, 8, 4, 35, tzinfo=UTC),
         )
 
@@ -38,3 +44,6 @@ class AppHomeServiceTest(IsolatedAsyncioTestCase):
             payload.connected_mailboxes[0].account_email, "demo-logistics@agentify.vn"
         )
         self.assertEqual(payload.recent_containers[0].container_no, "MSCU1234567")
+        self.assertEqual(payload.recent_containers[0].booking_no, "BKG-88921")
+        self.assertEqual(payload.recent_containers[0].bl_no, "HLCUSHA250601234")
+        self.assertEqual(payload.recent_containers[0].pod, "Hai Phong")

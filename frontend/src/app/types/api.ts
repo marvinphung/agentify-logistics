@@ -19,8 +19,14 @@ export interface AppHomeMailbox {
 
 export interface AppHomeRecentContainer {
   container_no: string;
+  booking_no: string | null;
+  bl_no: string | null;
+  pod: string | null;
+  etd: string | null;
   status_text: string | null;
   eta: string | null;
+  source_count: number;
+  attachment_count: number;
   updated_at: string | null;
 }
 

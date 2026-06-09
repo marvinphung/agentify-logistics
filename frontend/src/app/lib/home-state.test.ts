@@ -31,7 +31,7 @@ describe('getPrimaryHomeState', () => {
         recent_containers: [
           {
             container_no: 'MSCU1234567',
-            status_text: 'Arrival Notice revised',
+            status_text: 'ETA đã điều chỉnh do ùn tắc cảng',
             eta: '2026-06-14',
             updated_at: '2026-06-08T04:35:00Z',
           },

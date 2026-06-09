@@ -4,7 +4,12 @@ import json
 import os
 import urllib.request
 
-from scripts.seed_demo_data import DEMO_ACCOUNT_EMAIL, DEMO_DISPLAY_NAME, build_demo_payloads
+from scripts.seed_demo_data import (
+    DEMO_ACCOUNT_EMAIL,
+    DEMO_CONTAINER_NOS,
+    DEMO_DISPLAY_NAME,
+    build_demo_payloads,
+)
 
 API_BASE_URL = os.getenv("AGENTIFY_API_BASE_URL", "http://127.0.0.1:8766")
 INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY", "agentify-dev-key")
@@ -70,7 +75,7 @@ def main() -> None:
             "emails_fetched": len(payloads),
             "attachments_found": sum(len(payload.attachments) for payload in payloads),
             "pdf_text_extracted": sum(len(payload.attachments) for payload in payloads),
-            "containers_upserted": 3,
+            "containers_upserted": len(DEMO_CONTAINER_NOS),
         },
     )
 

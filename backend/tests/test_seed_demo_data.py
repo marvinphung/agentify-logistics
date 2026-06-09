@@ -12,7 +12,7 @@ class BuildDemoPayloadsTest(unittest.TestCase):
 
         payloads = build_demo_payloads(gmail_connection_id, sync_job_id)
 
-        self.assertEqual(len(payloads), 6)
+        self.assertEqual(len(payloads), 15)
         self.assertTrue(
             all(isinstance(payload, ProcessedEmailIngestRequest) for payload in payloads)
         )
@@ -21,7 +21,7 @@ class BuildDemoPayloadsTest(unittest.TestCase):
             {gmail_connection_id},
         )
         self.assertEqual({payload.sync_job_id for payload in payloads}, {sync_job_id})
-        self.assertEqual(sum(len(payload.attachments) for payload in payloads), 6)
+        self.assertEqual(sum(len(payload.attachments) for payload in payloads), 14)
         self.assertTrue(
             any(
                 fact.field_name == "eta" and fact.normalized_value == "2026-06-14"
@@ -36,7 +36,34 @@ class BuildDemoPayloadsTest(unittest.TestCase):
                 for fact in payload.extracted_facts
                 if fact.container_no
             },
-            {"MSCU1234567", "TGHU7654321", "OOLU9988776"},
+            {
+                "CAIU7788990",
+                "MSCU1234567",
+                "OOLU9988776",
+                "SEGU5566778",
+                "TGHU7654321",
+                "TRHU3344556",
+                "WHLU4455667",
+                "FSCU2211334",
+                "CMAU6677889",
+                "TEMU5544332",
+            },
+        )
+        self.assertTrue(any(not payload.attachments for payload in payloads))
+        self.assertTrue(
+            any(
+                fact.field_name == "status_text"
+                and fact.normalized_value == "Chỉ mới nhận email đặt chỗ, chưa có file PDF"
+                for payload in payloads
+                for fact in payload.extracted_facts
+            )
+        )
+        self.assertTrue(
+            any(
+                fact.field_name == "po_no" and fact.container_no == "FSCU2211334"
+                for payload in payloads
+                for fact in payload.extracted_facts
+            )
         )
 
 

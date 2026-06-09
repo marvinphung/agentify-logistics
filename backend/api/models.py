@@ -42,8 +42,14 @@ class AppHomeMailbox(BaseModel):
 
 class AppHomeRecentContainer(BaseModel):
     container_no: str
+    booking_no: str | None
+    bl_no: str | None
+    pod: str | None
+    etd: date | None
     status_text: str | None
     eta: date | None
+    source_count: int
+    attachment_count: int
     updated_at: datetime | None
 
 

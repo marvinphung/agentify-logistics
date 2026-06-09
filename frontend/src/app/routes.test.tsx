@@ -12,6 +12,7 @@ describe('router', () => {
     expect(childPaths).toEqual([
       'index',
       'setup',
+      'containers',
       'containers/:containerNo',
       'emails/:id',
     ]);

@@ -56,8 +56,14 @@ describe('SearchHome', () => {
       recent_containers: [
         {
           container_no: 'MSCU1234567',
-          status_text: 'Arrival Notice revised',
+          booking_no: 'BKG-123',
+          bl_no: 'BL-123',
+          pod: 'Hai Phong',
+          etd: '2026-06-10',
+          status_text: 'ETA đã điều chỉnh do ùn tắc cảng',
           eta: '2026-06-14',
+          source_count: 4,
+          attachment_count: 2,
           updated_at: '2026-06-08T04:35:00Z',
         },
       ],
@@ -76,7 +82,7 @@ describe('SearchHome', () => {
           pod: 'Hai Phong',
           etd: '2026-06-10',
           eta: '2026-06-14',
-          status_text: 'Arrival Notice revised',
+          status_text: 'ETA đã điều chỉnh do ùn tắc cảng',
           source_count: 4,
           attachment_count: 2,
           updated_at: '2026-06-08T04:35:00Z',
@@ -94,10 +100,16 @@ describe('SearchHome', () => {
     );
 
     expect(await screen.findByText('MSCU1234567')).toBeInTheDocument();
+    expect(screen.getAllByText('BKG-123').length).toBeGreaterThan(0);
 
-    fireEvent.change(screen.getAllByPlaceholderText('Nhập container / booking / B/L / PO')[0], {
+    fireEvent.change(
+      screen.getAllByPlaceholderText(
+        'Nhập mã container / mã booking / vận đơn (B/L) / mã đơn hàng (PO)',
+      )[0],
+      {
       target: { value: 'MSCU1234567' },
-    });
+      },
+    );
     fireEvent.submit(screen.getAllByRole('button', { name: 'Tra cứu' })[0].closest('form')!);
 
     await waitFor(() => {

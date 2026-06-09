@@ -1,6 +1,7 @@
 import { Database, Mail, Package2, RefreshCw } from 'lucide-react';
 
 import { formatDateTime } from '../../lib/format';
+import { getDatabaseStatusLabel, getHealthStatusLabel } from '../../lib/logistics-labels';
 import type { AppHomeResponse, HealthResponse } from '../../types/api';
 
 type SetupStateCardsProps = {
@@ -13,25 +14,25 @@ export function SetupStateCards({ health, home }: SetupStateCardsProps) {
     {
       label: 'Mailbox đã kết nối',
       value: String(home?.connected_mailboxes.length || 0),
-      hint: home?.connected_mailboxes[0]?.account_email || 'Chưa có mailbox',
+      hint: home?.connected_mailboxes[0]?.account_email || 'Chưa có hộp thư',
       icon: Mail,
     },
     {
       label: 'Lần sync gần nhất',
       value: formatDateTime(home?.last_sync_at || null),
-      hint: 'Theo sync job completed mới nhất',
+      hint: 'Theo lần đồng bộ hoàn tất gần nhất',
       icon: RefreshCw,
     },
     {
       label: 'Container đang có',
       value: String(home?.container_count || 0),
-      hint: 'Đã aggregate để tra cứu',
+      hint: 'Đã tổng hợp để tra cứu',
       icon: Package2,
     },
     {
       label: 'Tình trạng backend',
-      value: health?.status || 'unknown',
-      hint: `DB: ${health?.database || 'unknown'}`,
+      value: getHealthStatusLabel(health?.status),
+      hint: `DB: ${getDatabaseStatusLabel(health?.database)}`,
       icon: Database,
     },
   ];

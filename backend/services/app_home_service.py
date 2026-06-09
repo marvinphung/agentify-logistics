@@ -33,8 +33,14 @@ async def build_app_home_payload(
         recent_containers=[
             AppHomeRecentContainer(
                 container_no=container.container_no,
+                booking_no=container.booking_no,
+                bl_no=container.bl_no,
+                pod=container.pod,
+                etd=container.etd,
                 status_text=container.status_text,
                 eta=container.eta,
+                source_count=container.source_count,
+                attachment_count=container.attachment_count,
                 updated_at=container.updated_at,
             )
             for container in recent_containers

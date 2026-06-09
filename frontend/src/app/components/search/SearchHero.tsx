@@ -1,4 +1,5 @@
 import { Search } from 'lucide-react';
+import { getSearchPlaceholder } from '../../lib/logistics-labels';
 
 type SearchHeroProps = {
   query: string;
@@ -18,14 +19,14 @@ export function SearchHero({
       <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
         <div>
           <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">
-            Search-first workspace
+            Màn tra cứu chính
           </p>
           <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-[-0.04em] text-slate-900 sm:text-5xl">
             Tra cứu container trong vài giây
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-            Nhập container, booking, B/L hoặc PO để xem ngay status, file nguồn và email liên
-            quan mà không phải mở nhiều nơi.
+            Nhập mã container, mã booking, vận đơn hoặc mã đơn hàng để xem ngay trạng thái, file
+            nguồn và email liên quan mà không phải mở nhiều nơi.
           </p>
         </div>
 
@@ -45,7 +46,7 @@ export function SearchHero({
               <input
                 value={query}
                 onChange={(event) => onQueryChange(event.target.value)}
-                placeholder="Nhập container / booking / B/L / PO"
+                placeholder={getSearchPlaceholder()}
                 className="h-14 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-4 text-base text-slate-900 outline-none transition focus:border-slate-900"
               />
             </div>

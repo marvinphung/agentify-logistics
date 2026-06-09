@@ -30,7 +30,7 @@ describe('ShipmentDetail', () => {
         pod: 'Hai Phong',
         etd: '2026-06-10',
         eta: '2026-06-14',
-        status_text: 'Arrival Notice revised',
+        status_text: 'ETA đã điều chỉnh do ùn tắc cảng',
         source_count: 4,
         attachment_count: 2,
         updated_at: '2026-06-08T04:35:00Z',
@@ -79,7 +79,9 @@ describe('ShipmentDetail', () => {
     );
 
     expect(await screen.findByText('MSCU1234567')).toBeInTheDocument();
-    expect(screen.getByText('Source evidence')).toBeInTheDocument();
+    expect(screen.getByText('Nguồn dữ liệu đã trích xuất')).toBeInTheDocument();
+    expect(screen.getByText('Cảng xếp hàng (POL)')).toBeInTheDocument();
+    expect(screen.getAllByText('Thông báo hàng đến').length).toBeGreaterThan(0);
     expect(screen.getAllByText('arrival_notice.pdf').length).toBeGreaterThan(0);
   });
 });

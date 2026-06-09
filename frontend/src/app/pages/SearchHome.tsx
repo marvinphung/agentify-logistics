@@ -13,18 +13,18 @@ function toContainerListItem(item: AppHomeResponse['recent_containers'][number])
   return {
     id: item.container_no,
     container_no: item.container_no,
-    booking_no: null,
-    bl_no: null,
+    booking_no: item.booking_no,
+    bl_no: item.bl_no,
     po_no: null,
     vessel: null,
     voyage: null,
     pol: null,
-    pod: null,
-    etd: null,
+    pod: item.pod,
+    etd: item.etd,
     eta: item.eta,
     status_text: item.status_text,
-    source_count: 0,
-    attachment_count: 0,
+    source_count: item.source_count,
+    attachment_count: item.attachment_count,
     updated_at: item.updated_at,
   };
 }
@@ -130,16 +130,16 @@ export function SearchHome() {
           <div className="rounded-[24px] border border-slate-200 bg-[#f6f2ea] p-5">
             <div className="flex items-center gap-2 text-slate-500">
               <Search className="h-4 w-4" />
-              <p className="text-sm">Nếu chưa có dữ liệu</p>
+              <p className="text-sm">Xem toàn bộ danh sách</p>
             </div>
             <p className="mt-4 text-lg font-semibold text-slate-900">
-              Thiết lập mailbox và sync trước
+              Quét nhanh tất cả container theo trạng thái nghiệp vụ
             </p>
             <Link
-              to="/setup"
+              to="/containers"
               className="mt-4 inline-flex rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
             >
-              Thiết lập dữ liệu
+              Xem tất cả container
             </Link>
           </div>
         </section>
@@ -156,8 +156,8 @@ export function SearchHome() {
               Chưa có dữ liệu để tra cứu
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-              Hãy kết nối Gmail và tạo sync job đầu tiên. Khi có email và PDF được ingest, danh
-              sách container sẽ xuất hiện ngay tại trang này.
+              Hãy kết nối Gmail và tạo lần đồng bộ đầu tiên. Khi có email và PDF được đưa vào hệ
+              thống, danh sách container sẽ xuất hiện ngay tại trang này.
             </p>
             <Link
               to="/setup"
@@ -172,8 +172,8 @@ export function SearchHome() {
             title={hasSearched ? 'Kết quả tra cứu' : 'Container gần đây'}
             description={
               hasSearched
-                ? 'Danh sách này được lấy trực tiếp từ bảng containers sau khi aggregate dữ liệu email và PDF.'
-                : 'Các container mới nhất để user quay lại kiểm tra nhanh mà không phải nhập lại mã.'
+                ? 'Danh sách này được lấy trực tiếp từ dữ liệu container đã được tổng hợp từ email và PDF.'
+                : 'Các container mới nhất để người dùng quay lại kiểm tra nhanh mà không phải nhập lại mã.'
             }
             emptyMessage={
               hasSearched
