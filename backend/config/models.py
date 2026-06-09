@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class CORSConfig(BaseModel):
@@ -41,7 +41,26 @@ class AppConfig(BaseModel):
     uvicorn_logging_format: str
 
 
+class GmailOAuthConfig(BaseModel):
+    credentials_file: str = "credentials.json"
+    token_file: str = "token.json"
+    auth_port: int = 8080
+
+
+class GeminiExtractionConfig(BaseModel):
+    api_key: str = ""
+    model: str = "gemini-2.0-flash"
+
+
+class GmailServiceConfig(BaseModel):
+    query: str = "has:attachment newer_than:7d"
+    state_file: str = "processed.json"
+    oauth: GmailOAuthConfig = Field(default_factory=GmailOAuthConfig)
+    extraction: GeminiExtractionConfig = Field(default_factory=GeminiExtractionConfig)
+
+
 class RootConfig(BaseModel):
     authentication: AuthenticationConfig
     databases: DatabaseConfig
     app: AppConfig
+    gmail_service: GmailServiceConfig = Field(default_factory=GmailServiceConfig)

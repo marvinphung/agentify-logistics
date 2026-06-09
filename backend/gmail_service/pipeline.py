@@ -1,9 +1,11 @@
-from .field_extract import extract_fields
-from .pdf_reader import read_pdf_text
-from .schema import ExtractedRecord, Source
+from gmail_service.field_extract import extract_fields
+from gmail_service.models import ExtractedRecord, Source
+from gmail_service.pdf_reader import read_pdf_text
 
 
-def process_pdf(email: dict, filename: str, pdf_bytes: bytes) -> ExtractedRecord:
+def process_pdf_attachment(
+    email: dict[str, str], filename: str, pdf_bytes: bytes
+) -> ExtractedRecord:
     text = read_pdf_text(pdf_bytes)
     try:
         fields = extract_fields(email["subject"], email["sender"], text)
@@ -16,6 +18,7 @@ def process_pdf(email: dict, filename: str, pdf_bytes: bytes) -> ExtractedRecord
             "route": {},
         }
         status = "failed"
+
     return ExtractedRecord(
         source=Source(
             message_id=email["message_id"],

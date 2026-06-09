@@ -5,6 +5,7 @@ FastAPI + PostgreSQL backend for the narrow prototype:
 - register Gmail mailboxes
 - track sync jobs
 - ingest processed emails/PDF extraction output from other services
+- keep the Gmail OAuth/fetch/extract integration code as an embedded module
 - aggregate data by `container_no`
 - serve container/email lookup APIs for the frontend
 
@@ -13,6 +14,7 @@ The backend intentionally follows the same operational style as
 
 - `.env` + `app-config.yaml`
 - `config/`, `db/`, `api/`, `services/`
+- `gmail_service/` for Gmail-specific integration code
 - async SQLAlchemy session dependency
 - Alembic migration flow
 - Dockerfile + `compose.yaml`
