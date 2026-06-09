@@ -1,10 +1,10 @@
 import io
 
-import fitz
-import pdfplumber
-
 
 def read_pdf_text(pdf_bytes: bytes) -> str:
+    import fitz
+    import pdfplumber
+
     text = ""
     with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
         for page in pdf.pages:

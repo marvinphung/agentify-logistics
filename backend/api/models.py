@@ -34,6 +34,10 @@ class GmailConnectionResponse(BaseModel):
     updated_at: datetime | None
 
 
+class GmailOAuthStartResponse(BaseModel):
+    authorization_url: str
+
+
 class AppHomeMailbox(BaseModel):
     id: UUID
     account_email: str

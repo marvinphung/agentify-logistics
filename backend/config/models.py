@@ -43,8 +43,8 @@ class AppConfig(BaseModel):
 
 class GmailOAuthConfig(BaseModel):
     credentials_file: str = "credentials.json"
-    token_file: str = "token.json"
-    auth_port: int = 8080
+    redirect_uri: str = "http://localhost:8766/api/v1/gmail-connections/oauth/callback"
+    frontend_return_url: str = "http://localhost:5173/setup"
 
 
 class GeminiExtractionConfig(BaseModel):

@@ -12,6 +12,8 @@ from api.models import (
     UpdateSyncJobRequest,
 )
 from db.database import get_db
+from services.gmail_connection_service import get_gmail_connection
+from services.gmail_ingestion_service import execute_sync_job
 from services.sync_job_service import (
     create_sync_job,
     get_sync_job,
@@ -71,3 +73,19 @@ async def update_sync_job_endpoint(
     if job is None:
         raise HTTPException(status_code=404, detail="Sync job not found")
     return job
+
+
+@router.post("/{job_id}/run", response_model=SyncJobResponse)
+async def run_sync_job_endpoint(
+    job_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> SyncJobResponse:
+    job = await get_sync_job(db, job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Sync job not found")
+
+    connection = await get_gmail_connection(db, job.gmail_connection_id)
+    if connection is None:
+        raise HTTPException(status_code=404, detail="Gmail connection not found")
+
+    return await execute_sync_job(db, connection, job)

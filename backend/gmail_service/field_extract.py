@@ -1,8 +1,6 @@
 import json
 from typing import Any
 
-from google import genai
-
 from gmail_service.config import GEMINI_API_KEY, GEMINI_MODEL
 
 PROMPT = """You are a logistics document extractor. Return ONLY a valid JSON object (no markdown, no explanation) with these fields:
@@ -83,6 +81,8 @@ Rules: unknown fields set to null; arrays empty if no values; dates as YYYY-MM-D
 def extract_fields(subject: str, sender: str, pdf_text: str) -> dict[str, Any]:
     if not GEMINI_API_KEY:
         raise ValueError("GEMINI_API_KEY is required for Gmail service extraction")
+
+    from google import genai
 
     client = genai.Client(api_key=GEMINI_API_KEY)
     prompt = PROMPT.format(subject=subject, sender=sender, pdf_text=pdf_text[:8000])

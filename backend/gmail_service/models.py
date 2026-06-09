@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -95,3 +96,26 @@ class ExtractedRecord(BaseModel):
     cargo: Cargo | None = None
     charges: list[Charge] = Field(default_factory=list)
     extraction_status: Literal["ok", "partial", "failed"] = "ok"
+
+
+class GmailAttachmentPayload(BaseModel):
+    gmail_attachment_id: str | None = None
+    filename: str
+    mime_type: str
+    size_bytes: int | None = None
+    attachment_bytes: bytes
+
+
+class GmailEmailPayload(BaseModel):
+    gmail_message_id: str
+    gmail_thread_id: str | None = None
+    subject: str
+    from_email: str
+    to_emails: list[str] = Field(default_factory=list)
+    cc_emails: list[str] = Field(default_factory=list)
+    sent_at: datetime
+    snippet: str | None = None
+    body_text: str | None = None
+    body_html: str | None = None
+    raw_labels: list[str] = Field(default_factory=list)
+    attachments: list[GmailAttachmentPayload] = Field(default_factory=list)

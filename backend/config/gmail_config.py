@@ -11,7 +11,7 @@ class GmailServiceConfig(BaseModel):
     QUERY: str = gmail_service.query
     STATE_FILE: str = gmail_service.state_file
     GMAIL_CREDENTIALS_FILE: str = gmail_oauth.credentials_file
-    GMAIL_TOKEN_FILE: str = gmail_oauth.token_file
-    GMAIL_AUTH_PORT: int = gmail_oauth.auth_port
+    GMAIL_REDIRECT_URI: str = gmail_oauth.redirect_uri
+    GMAIL_FRONTEND_RETURN_URL: str = gmail_oauth.frontend_return_url
     GEMINI_API_KEY: str = gemini_extraction.api_key
     GEMINI_MODEL: str = gemini_extraction.model

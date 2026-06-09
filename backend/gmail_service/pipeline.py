@@ -7,8 +7,14 @@ def process_pdf_attachment(
     email: dict[str, str], filename: str, pdf_bytes: bytes
 ) -> ExtractedRecord:
     text = read_pdf_text(pdf_bytes)
+    return process_pdf_text(email, filename, text)
+
+
+def process_pdf_text(
+    email: dict[str, str], filename: str, extracted_text: str
+) -> ExtractedRecord:
     try:
-        fields = extract_fields(email["subject"], email["sender"], text)
+        fields = extract_fields(email["subject"], email["sender"], extracted_text)
         status = "ok"
     except Exception:
         fields = {

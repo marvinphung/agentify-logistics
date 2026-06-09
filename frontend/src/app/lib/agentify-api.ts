@@ -24,18 +24,10 @@ export function listGmailConnections() {
   return apiRequest<GmailConnection[]>('/api/v1/gmail-connections');
 }
 
-export function upsertGmailConnection(payload: {
-  account_email: string;
-  display_name?: string;
-  google_account_id?: string;
-  encrypted_refresh_token?: string;
-  access_scope?: string;
-  status?: string;
-}) {
-  return apiRequest<GmailConnection>('/api/v1/gmail-connections', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
+export function startGmailOAuth(redirect_to?: string) {
+  return apiRequest<{ authorization_url: string }>(
+    `/api/v1/gmail-connections/oauth/start${buildQueryString({ redirect_to })}`,
+  );
 }
 
 export function createSyncJob(payload: {
@@ -48,6 +40,12 @@ export function createSyncJob(payload: {
   return apiRequest<SyncJob>('/api/v1/sync-jobs', {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+}
+
+export function runSyncJob(jobId: string) {
+  return apiRequest<SyncJob>(`/api/v1/sync-jobs/${encodeURIComponent(jobId)}/run`, {
+    method: 'POST',
   });
 }
 

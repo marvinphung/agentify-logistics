@@ -11,7 +11,8 @@ vi.mock('../lib/agentify-api', () => ({
   listEmails: vi.fn(),
   listGmailConnections: vi.fn(),
   listSyncJobs: vi.fn(),
-  upsertGmailConnection: vi.fn(),
+  runSyncJob: vi.fn(),
+  startGmailOAuth: vi.fn(),
 }));
 
 import {
@@ -76,7 +77,7 @@ describe('Setup', () => {
     );
 
     expect(await screen.findByText('Thiết lập dữ liệu')).toBeInTheDocument();
-    expect(screen.getByText('Kết nối hộp thư')).toBeInTheDocument();
+    expect(screen.getByText('Kết nối Gmail')).toBeInTheDocument();
     expect(screen.getByText('Email đã đưa vào hệ thống')).toBeInTheDocument();
     expect(screen.getAllByText('demo-logistics@agentify.vn').length).toBeGreaterThan(0);
     expect(screen.getByText('Đã kết nối')).toBeInTheDocument();
