@@ -1,0 +1,22 @@
+name: agentify-logistics-backend
+
+services:
+  agentify-logistics-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - "linux/amd64"
+        - "linux/arm64"
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${BACKEND_PORT:-8766}:8766"
+    networks:
+      - agentify-logistics-app
+
+networks:
+  agentify-logistics-app:
+    name: agentify-logistics-app-net
+    driver: bridge

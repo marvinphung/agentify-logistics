@@ -1,0 +1,25 @@
+authentication:
+  api_key:
+    name: "X-Internal-API-Key"
+    value: "${INTERNAL_API_KEY}"
+  cors:
+    allow_ips:
+      - "*"
+    allow_origins: []
+    allow_origins_regex: "${ALLOW_ORIGINS_REGEX}"
+
+databases:
+  postgres:
+    url: "${DATABASE_URL}"
+    pool:
+      size: 10
+      max_overflow: 20
+      timeout: 30
+      recycle: 1800
+
+app:
+  name: "agentify-logistics-backend"
+  title: "Agentify Logistics API"
+  description: "Container-centric API for ingesting and searching logistics email and PDF data."
+  proxy_root_path: "${APP_PROXY_ROOT_PATH}"
+  uvicorn_logging_format: "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] - %(message)s"
