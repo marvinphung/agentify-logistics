@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import DBAPIError, SQLAlchemyError
 
 from api import app, logger
+from api.routes.attachments import router as attachments_router
 from api.routes.app_home import router as app_home_router
 from api.routes.containers import router as containers_router
 from api.routes.emails import router as emails_router
@@ -16,6 +17,7 @@ from api.routes.sync_jobs import router as sync_jobs_router
 
 app.include_router(health_router)
 app.include_router(app_home_router)
+app.include_router(attachments_router)
 app.include_router(gmail_connections_router)
 app.include_router(sync_jobs_router)
 app.include_router(ingest_router)

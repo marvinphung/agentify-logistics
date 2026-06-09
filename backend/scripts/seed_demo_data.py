@@ -4,6 +4,7 @@ import argparse
 import asyncio
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 from uuid import UUID
 
 from sqlalchemy import text
@@ -20,17 +21,76 @@ from services.ingestion_service import ingest_processed_email
 DEMO_ACCOUNT_EMAIL = "demo-logistics@agentify.vn"
 DEMO_DISPLAY_NAME = "Agentify Demo Logistics"
 DEMO_GOOGLE_ACCOUNT_ID = "agentify-demo-google-account"
+BACKEND_ROOT = Path(__file__).resolve().parents[1]
+DEMO_PDF_DIR = BACKEND_ROOT / "storage" / "demo_pdfs"
 
 
 def _dt(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(UTC)
 
 
+def _escape_pdf_text(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+
+def _build_text_pdf_bytes(lines: list[str]) -> bytes:
+    text_lines = [_escape_pdf_text(line) for line in lines if line.strip()]
+    if not text_lines:
+        text_lines = ["Agentify demo PDF"]
+
+    content_lines = ["BT", "/F1 12 Tf", "50 780 Td", "14 TL"]
+    for index, line in enumerate(text_lines):
+        if index == 0:
+            content_lines.append(f"({line}) Tj")
+        else:
+            content_lines.append("T*")
+            content_lines.append(f"({line}) Tj")
+    content_lines.append("ET")
+    stream = "\n".join(content_lines).encode("latin-1", errors="replace")
+
+    objects = [
+        b"1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
+        b"2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj",
+        b"3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj",
+        b"4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj",
+        b"5 0 obj << /Length %d >> stream\n%b\nendstream endobj" % (len(stream), stream),
+    ]
+
+    pdf = bytearray(b"%PDF-1.4\n")
+    offsets = [0]
+    for obj in objects:
+        offsets.append(len(pdf))
+        pdf.extend(obj)
+        pdf.extend(b"\n")
+
+    xref_offset = len(pdf)
+    pdf.extend(f"xref\n0 {len(offsets)}\n".encode("ascii"))
+    pdf.extend(b"0000000000 65535 f \n")
+    for offset in offsets[1:]:
+        pdf.extend(f"{offset:010d} 00000 n \n".encode("ascii"))
+    pdf.extend(
+        (
+            f"trailer << /Size {len(offsets)} /Root 1 0 R >>\n"
+            f"startxref\n{xref_offset}\n%%EOF\n"
+        ).encode("ascii")
+    )
+    return bytes(pdf)
+
+
+def _materialize_demo_pdf(filename: str, extracted_text: str | None) -> tuple[str, int]:
+    DEMO_PDF_DIR.mkdir(parents=True, exist_ok=True)
+    relative_path = Path("storage") / "demo_pdfs" / filename
+    absolute_path = BACKEND_ROOT / relative_path
+    lines = (extracted_text or filename).splitlines()
+    absolute_path.write_bytes(_build_text_pdf_bytes(lines))
+    return relative_path.as_posix(), absolute_path.stat().st_size
+
+
 def build_demo_payloads(
     gmail_connection_id: UUID,
     sync_job_id: UUID,
 ) -> list[ProcessedEmailIngestRequest]:
-    return [
+    payloads = [
         ProcessedEmailIngestRequest(
             gmail_connection_id=gmail_connection_id,
             sync_job_id=sync_job_id,
@@ -609,6 +669,15 @@ def build_demo_payloads(
             ],
         ),
     ]
+
+    for payload in payloads:
+        for attachment in payload.attachments:
+            attachment.storage_path, attachment.size_bytes = _materialize_demo_pdf(
+                attachment.filename,
+                attachment.extracted_text,
+            )
+
+    return payloads
 
 
 async def _get_or_create_demo_connection(session) -> GmailConnection:

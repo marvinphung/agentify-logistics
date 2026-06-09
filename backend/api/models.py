@@ -191,6 +191,7 @@ class RelatedAttachmentSummary(BaseModel):
     filename: str
     email_id: UUID
     document_type: str | None
+    file_url: str | None = None
 
 
 class ContainerDetailResponse(BaseModel):

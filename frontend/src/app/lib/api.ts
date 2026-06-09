@@ -16,7 +16,7 @@ export class ApiError extends Error {
 }
 
 export async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(buildApiUrl(path), {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -43,6 +43,10 @@ export async function apiRequest<T>(path: string, options?: RequestInit): Promis
   }
 
   return response.json() as Promise<T>;
+}
+
+export function buildApiUrl(path: string): string {
+  return `${API_BASE_URL}${path}`;
 }
 
 export function buildQueryString(

@@ -22,6 +22,10 @@ from services.container_service import (
 router = APIRouter(prefix="/api/v1/containers", tags=["containers"])
 
 
+def _attachment_file_url(attachment_id) -> str:
+    return f"/api/v1/attachments/{attachment_id}/file"
+
+
 def _to_container_item(container) -> ContainerListItem:
     return ContainerListItem(
         id=container.id,
@@ -86,6 +90,7 @@ async def get_container_detail_endpoint(
                 filename=attachment.filename,
                 email_id=attachment.email_id,
                 document_type=attachment.document_type,
+                file_url=_attachment_file_url(attachment.id),
             )
             for attachment in attachments
         ],

@@ -118,6 +118,7 @@ export interface RelatedAttachmentSummary {
   filename: string;
   email_id: string;
   document_type: string | null;
+  file_url: string | null;
 }
 
 export interface ContainerDetailResponse {
@@ -151,6 +152,7 @@ export interface EmailAttachment {
   size_bytes: number | null;
   text_extract_status: string;
   document_type: string | null;
+  file_url: string | null;
 }
 
 export interface EmailExtractedFact {

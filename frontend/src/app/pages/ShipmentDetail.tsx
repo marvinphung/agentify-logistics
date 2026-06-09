@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { ArrowLeft, Calendar, FileText, Mail, MapPin, Ship } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Mail, Ship } from 'lucide-react';
 import { getContainer, getContainerFacts } from '../lib/agentify-api';
 import type { ContainerDetailResponse, ContainerFact } from '../types/api';
 import { formatDate, formatDateTime, toTitleCase } from '../lib/format';
+import { buildApiUrl } from '../lib/api';
 
 export function ShipmentDetail() {
   const { containerNo } = useParams();
@@ -267,6 +268,19 @@ export function ShipmentDetail() {
                         Email nguồn
                       </Link>
                     </div>
+                    {attachment.file_url ? (
+                      <div className="mt-3">
+                        <a
+                          href={buildApiUrl(attachment.file_url)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-sm font-medium text-slate-900 hover:underline"
+                        >
+                          Xem PDF
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </div>
+                    ) : null}
                   </div>
                 ))}
                 {relatedAttachments.length === 0 ? (

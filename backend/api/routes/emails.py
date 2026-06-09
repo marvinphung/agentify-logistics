@@ -10,6 +10,10 @@ from services.container_service import get_email_detail, list_emails
 router = APIRouter(prefix="/api/v1/emails", tags=["emails"])
 
 
+def _attachment_file_url(attachment_id) -> str:
+    return f"/api/v1/attachments/{attachment_id}/file"
+
+
 @router.get("", response_model=EmailListResponse)
 async def list_emails_endpoint(
     gmail_connection_id: UUID | None = Query(default=None),
@@ -81,6 +85,7 @@ async def get_email_detail_endpoint(
                 "size_bytes": attachment.size_bytes,
                 "text_extract_status": attachment.text_extract_status,
                 "document_type": attachment.document_type,
+                "file_url": _attachment_file_url(attachment.id),
             }
             for attachment in detail["attachments"]
         ],

@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { ArrowLeft, FileText, Mail, Paperclip } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Mail, Paperclip } from 'lucide-react';
 import { getEmail } from '../lib/agentify-api';
 import type { EmailDetail as EmailDetailResponse } from '../types/api';
 import { formatDateTime, toTitleCase } from '../lib/format';
+import { buildApiUrl } from '../lib/api';
 
 export function EmailDetail() {
   const { id } = useParams();
   const [detail, setDetail] = useState<EmailDetailResponse | null>(null);
+  const [selectedAttachmentId, setSelectedAttachmentId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +24,7 @@ export function EmailDetail() {
       try {
         const response = await getEmail(id);
         setDetail(response);
+        setSelectedAttachmentId(response.attachments[0]?.id || null);
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Không tải được email.');
       } finally {
@@ -54,6 +57,14 @@ export function EmailDetail() {
       </div>
     );
   }
+
+  const selectedAttachment =
+    detail.attachments.find((attachment) => attachment.id === selectedAttachmentId) ||
+    detail.attachments[0] ||
+    null;
+  const selectedAttachmentUrl = selectedAttachment?.file_url
+    ? buildApiUrl(selectedAttachment.file_url)
+    : null;
 
   return (
     <div className="min-h-[100dvh] bg-[#f7f7f1] p-5 sm:p-6 lg:p-8">
@@ -132,6 +143,26 @@ export function EmailDetail() {
                         {attachment.text_extract_status}
                       </span>
                     </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedAttachmentId(attachment.id)}
+                        className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-slate-700"
+                      >
+                        Xem PDF
+                      </button>
+                      {attachment.file_url ? (
+                        <a
+                          href={buildApiUrl(attachment.file_url)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
+                        >
+                          Mở tab mới
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      ) : null}
+                    </div>
                   </div>
                 ))}
                 {detail.attachments.length === 0 ? (
@@ -140,6 +171,43 @@ export function EmailDetail() {
                   </div>
                 ) : null}
               </div>
+            </div>
+
+            <div className="rounded-[28px] border border-slate-200 bg-white p-6 sm:p-8">
+              <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-900">
+                <FileText className="h-5 w-5 text-slate-500" />
+                PDF preview
+              </h2>
+              {selectedAttachmentUrl ? (
+                <div className="mt-5 overflow-hidden rounded-[24px] border border-slate-200 bg-[#fcfbf8]">
+                  <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-3">
+                    <div>
+                      <p className="font-medium text-slate-900">{selectedAttachment?.filename}</p>
+                      <p className="text-sm text-slate-500">
+                        {selectedAttachment?.document_type || 'PDF attachment'}
+                      </p>
+                    </div>
+                    <a
+                      href={selectedAttachmentUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:text-slate-900"
+                    >
+                      Mở riêng
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                  <iframe
+                    title={selectedAttachment?.filename || 'PDF preview'}
+                    src={selectedAttachmentUrl}
+                    className="h-[720px] w-full bg-white"
+                  />
+                </div>
+              ) : (
+                <div className="mt-5 rounded-[22px] border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                  Chọn một attachment PDF để xem preview.
+                </div>
+              )}
             </div>
           </div>
 
