@@ -19,7 +19,7 @@ npm install
 
 2. Chạy backend ở `http://127.0.0.1:8766`
 
-3. Tạo `.env` từ `.env.example` nếu cần chỉnh proxy target
+3. Tạo `.env.local` từ `.env.example` nếu cần chỉnh proxy target
 
 4. Chạy Vite dev server:
 
@@ -33,9 +33,15 @@ Local dev nên để `VITE_API_BASE_URL` rỗng. Khi đó `vite.config.ts` sẽ 
 
 Production nên ưu tiên để frontend gọi same-origin `/api` và `/health`.
 
-- Nếu deploy trên Vercel, giữ `VITE_API_BASE_URL` rỗng và dùng `vercel.json` rewrite sang `http://131.153.239.187:8766`.
+- Nếu deploy trên Vercel, giữ `VITE_API_BASE_URL` rỗng và dùng `vercel.json` rewrite sang `http://95.216.142.220:8766`.
 - Nếu build static rồi đặt sau reverse proxy riêng, cũng giữ `VITE_API_BASE_URL` rỗng và để proxy ở Nginx/Caddy xử lý `/api` và `/health`.
 - Chỉ set `VITE_API_BASE_URL` khi anh thật sự muốn bundle FE với một backend base URL cố định.
+
+## Env files
+
+- `.env.local`: dùng cho máy dev local, không commit
+- `.env.production`: dùng cho config production local preview, không commit
+- `.env.example`: mẫu cấu hình để copy sang `.env.local`
 
 ## Màn hình đã nối BE
 

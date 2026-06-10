@@ -20,6 +20,13 @@ The backend intentionally follows the same operational style as
 - Dockerfile + `compose.yaml`
 - one canonical `DATABASE_URL`, with sync/async SQLAlchemy URLs derived in config
 
+## Deploy Notes
+
+- Backend listens on `8766`.
+- For Vercel frontend deployment, set `CORS_ORIGINS` to include the deployed frontend URL.
+- If you use Gmail OAuth, set `GMAIL_FRONTEND_RETURN_URL` to the deployed frontend setup page and `GMAIL_REDIRECT_URI` to the public backend callback URL.
+- If the backend is behind a reverse proxy, set `APP_PROXY_ROOT_PATH` accordingly; otherwise leave it empty.
+
 ## Quick Start
 
 1. Copy `.env.example` to `.env` if needed.
@@ -49,6 +56,8 @@ The embedded Gmail module expects these env vars:
 - `GMAIL_QUERY`
 - `GEMINI_API_KEY`
 - `GEMINI_MODEL`
+- `CORS_ORIGINS`
+- `ALLOW_ORIGINS_REGEX`
 
 Connection flow:
 

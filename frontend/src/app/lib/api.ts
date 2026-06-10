@@ -1,7 +1,6 @@
 const configuredApiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
-export const API_BASE_URL =
-  configuredApiBaseUrl === 'https://api.agentify.io.vn' ? '' : configuredApiBaseUrl;
+export const API_BASE_URL = configuredApiBaseUrl;
 
 export class ApiError extends Error {
   status: number;
