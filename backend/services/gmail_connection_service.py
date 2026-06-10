@@ -41,3 +41,9 @@ async def list_gmail_connections(db: AsyncSession) -> list[GmailConnection]:
         select(GmailConnection).order_by(GmailConnection.created_at.desc())
     )
     return list(result.scalars().all())
+
+
+async def get_gmail_connection(
+    db: AsyncSession, connection_id
+) -> GmailConnection | None:
+    return await db.get(GmailConnection, connection_id)

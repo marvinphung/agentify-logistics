@@ -1,0 +1,11 @@
+from config.settings import Configs
+
+settings = Configs.get_gmail_service_config()
+
+GEMINI_API_KEY = settings.GEMINI_API_KEY
+GEMINI_MODEL = settings.GEMINI_MODEL
+GMAIL_CREDENTIALS_FILE = settings.GMAIL_CREDENTIALS_FILE
+GMAIL_REDIRECT_URI = settings.GMAIL_REDIRECT_URI
+GMAIL_FRONTEND_RETURN_URL = settings.GMAIL_FRONTEND_RETURN_URL
+GMAIL_QUERY = settings.QUERY
+STATE_FILE = settings.STATE_FILE

@@ -11,8 +11,14 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql+psycopg://agentify:agentify@host.docker.internal:5443/agentify}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${BACKEND_PORT:-8766}:8766"
+    volumes:
+      - agentify-logistics-storage:/app/storage
     networks:
       - agentify-logistics-app
 
@@ -20,3 +26,6 @@ networks:
   agentify-logistics-app:
     name: agentify-logistics-app-net
     driver: bridge
+
+volumes:
+  agentify-logistics-storage:

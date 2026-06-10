@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -32,6 +33,10 @@ class GmailConnectionResponse(BaseModel):
     last_synced_at: datetime | None
     created_at: datetime
     updated_at: datetime | None
+
+
+class GmailOAuthStartResponse(BaseModel):
+    authorization_url: str
 
 
 class AppHomeMailbox(BaseModel):
@@ -118,6 +123,7 @@ class IngestAttachmentRequest(BaseModel):
     text_extract_status: str = "extracted"
     extracted_text: str | None = None
     document_type: str | None = None
+    extracted_record: dict[str, Any] | None = None
 
 
 class IngestFactRequest(BaseModel):

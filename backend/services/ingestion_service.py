@@ -82,6 +82,7 @@ async def ingest_processed_email(db: AsyncSession, payload: ProcessedEmailIngest
                 text_extract_status=attachment_payload.text_extract_status,
                 extracted_text=attachment_payload.extracted_text,
                 document_type=attachment_payload.document_type,
+                extracted_record=attachment_payload.extracted_record,
             )
             db.add(attachment)
             await db.flush()
@@ -94,6 +95,7 @@ async def ingest_processed_email(db: AsyncSession, payload: ProcessedEmailIngest
             attachment.text_extract_status = attachment_payload.text_extract_status
             attachment.extracted_text = attachment_payload.extracted_text
             attachment.document_type = attachment_payload.document_type
+            attachment.extracted_record = attachment_payload.extracted_record
             await db.flush()
         attachment_by_filename[attachment.filename] = attachment
 

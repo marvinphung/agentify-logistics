@@ -117,7 +117,7 @@ class Attachment(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email_id = Column(UUID(as_uuid=True), ForeignKey("emails.id"), nullable=False, index=True)
-    gmail_attachment_id = Column(String(255), nullable=True)
+    gmail_attachment_id = Column(Text, nullable=True)
     filename = Column(String(500), nullable=False)
     mime_type = Column(String(255), nullable=False)
     size_bytes = Column(Integer, nullable=True)
@@ -126,6 +126,7 @@ class Attachment(Base):
     text_extract_status = Column(String(50), nullable=False, default="pending")
     extracted_text = Column(Text, nullable=True)
     document_type = Column(String(100), nullable=True)
+    extracted_record = Column(JSONB, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

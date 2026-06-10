@@ -23,3 +23,14 @@ app:
   description: "Container-centric API for ingesting and searching logistics email and PDF data."
   proxy_root_path: "${APP_PROXY_ROOT_PATH}"
   uvicorn_logging_format: "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] - %(message)s"
+
+gmail_service:
+  query: "${GMAIL_QUERY}"
+  state_file: "${GMAIL_STATE_FILE}"
+  oauth:
+    credentials_file: "${GMAIL_CREDENTIALS_FILE}"
+    redirect_uri: "${GMAIL_REDIRECT_URI}"
+    frontend_return_url: "${GMAIL_FRONTEND_RETURN_URL}"
+  extraction:
+    api_key: "${GEMINI_API_KEY}"
+    model: "${GEMINI_MODEL}"

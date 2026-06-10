@@ -1,10 +1,7 @@
 import json
+from typing import Any
 
-from google import genai
-
-from config import GEMINI_API_KEY, GEMINI_MODEL
-
-client = genai.Client(api_key=GEMINI_API_KEY)
+from gmail_service.config import GEMINI_API_KEY, GEMINI_MODEL
 
 PROMPT = """You are a logistics document extractor. Return ONLY a valid JSON object (no markdown, no explanation) with these fields:
 
@@ -33,7 +30,7 @@ PROMPT = """You are a logistics document extractor. Return ONLY a valid JSON obj
   "issuer": {{
     "name": issuing company name or null,
     "address": full address or null,
-    "contact_person": contact person name e.g. "Huynh Van Hieu" or null,
+    "contact_person": contact person name or null,
     "email": email address or null,
     "phone": phone number or null
   }} or null,
@@ -60,14 +57,14 @@ PROMPT = """You are a logistics document extractor. Return ONLY a valid JSON obj
   }},
   "cargo": {{
     "description": goods description,
-    "packages": quantity and unit e.g. "2 Package" / "2855 CARTONS" / "42 CTNS",
+    "packages": quantity and unit,
     "gross_weight_kg": float kg or null,
     "tare_weight_kg": tare weight float kg or null,
     "volume_cbm": float CBM or null,
     "marks_numbers": Marks & Numbers or null
   }},
   "charges": array of charge items, each:
-    {{"description": ..., "quantity": e.g. "4.85 x Cbm" or "1 x Shipment", "currency": ..., "amount": float, "vat_rate": e.g. "10%"}}
+    {{"description": ..., "quantity": ..., "currency": ..., "amount": float, "vat_rate": e.g. "10%"}}
     (empty array if no charge table)
 }}
 
@@ -81,29 +78,14 @@ Rules: unknown fields set to null; arrays empty if no values; dates as YYYY-MM-D
 {pdf_text}"""
 
 
-def extract_fields(subject, sender, pdf_text) -> dict:
-    import time
+def extract_fields(subject: str, sender: str, pdf_text: str) -> dict[str, Any]:
+    if not GEMINI_API_KEY:
+        raise ValueError("GEMINI_API_KEY is required for Gmail service extraction")
 
+    from google import genai
+
+    client = genai.Client(api_key=GEMINI_API_KEY)
     prompt = PROMPT.format(subject=subject, sender=sender, pdf_text=pdf_text[:8000])
-    last_error: Exception = RuntimeError("No attempts made")
-    for attempt in range(3):
-        try:
-            response = client.models.generate_content(
-                model=GEMINI_MODEL, contents=prompt
-            )
-            raw = (
-                response.text.strip()
-                .removeprefix("```json")
-                .removesuffix("```")
-                .strip()
-            )
-            return json.loads(raw)
-        except Exception as e:
-            last_error = e
-            if "429" in str(e) and attempt < 2:
-                wait = 10 * (attempt + 1)
-                print(f"[WARN] Rate limited, retrying in {wait}s...")
-                time.sleep(wait)
-            else:
-                raise
-    raise last_error
+    response = client.models.generate_content(model=GEMINI_MODEL, contents=prompt)
+    raw = response.text.strip().removeprefix("```json").removesuffix("```").strip()
+    return json.loads(raw)

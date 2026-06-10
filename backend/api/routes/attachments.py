@@ -13,6 +13,12 @@ router = APIRouter(prefix="/api/v1/attachments", tags=["attachments"])
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
 
+def attachment_file_url(attachment) -> str | None:
+    if not getattr(attachment, "storage_path", None):
+        return None
+    return f"/api/v1/attachments/{attachment.id}/file"
+
+
 def _resolve_storage_path(storage_path: str) -> Path:
     path = Path(storage_path)
     if not path.is_absolute():

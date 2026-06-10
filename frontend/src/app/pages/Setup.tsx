@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { Mail, RefreshCw } from 'lucide-react';
 
 import { SetupStateCards } from '../components/setup/SetupStateCards';
@@ -10,7 +10,8 @@ import {
   listEmails,
   listGmailConnections,
   listSyncJobs,
-  upsertGmailConnection,
+  runSyncJob,
+  startGmailOAuth,
 } from '../lib/agentify-api';
 import { formatDateTime } from '../lib/format';
 import {
@@ -25,27 +26,18 @@ import type {
   SyncJob,
 } from '../types/api';
 
-const initialForm = {
-  account_email: '',
-  display_name: '',
-  google_account_id: '',
-  access_scope: 'gmail.readonly',
-  encrypted_refresh_token: 'prototype-token',
-  status: 'connected',
-};
-
 export function Setup() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [home, setHome] = useState<AppHomeResponse | null>(null);
   const [connections, setConnections] = useState<GmailConnection[]>([]);
   const [jobs, setJobs] = useState<SyncJob[]>([]);
   const [emails, setEmails] = useState<EmailListItem[]>([]);
-  const [form, setForm] = useState(initialForm);
   const [selectedConnectionId, setSelectedConnectionId] = useState('');
   const [query, setQuery] = useState('newer_than:30d');
   const [maxResults, setMaxResults] = useState(200);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [isCreatingJob, setIsCreatingJob] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -80,13 +72,6 @@ export function Setup() {
       setJobs(jobsResponse.items);
       setEmails(emailsResponse.items);
 
-      if (loadedConnections[0]) {
-        setForm((current) => ({
-          ...current,
-          account_email: current.account_email || loadedConnections[0].account_email,
-          display_name: current.display_name || loadedConnections[0].display_name || '',
-        }));
-      }
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Không tải được dữ liệu setup.');
     } finally {
@@ -98,6 +83,24 @@ export function Setup() {
     loadPage();
   }, []);
 
+  useEffect(() => {
+    const oauthStatus = searchParams.get('gmail_oauth');
+    const message = searchParams.get('message');
+    if (oauthStatus === 'success') {
+      setSuccess('Đã kết nối Gmail thành công.');
+    } else if (oauthStatus === 'error') {
+      setError(message || 'Kết nối Gmail không thành công.');
+    }
+    if (!oauthStatus) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('gmail_oauth');
+    nextParams.delete('message');
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
   const stats = useMemo(() => {
     const latestJob = jobs[0];
     return {
@@ -107,27 +110,18 @@ export function Setup() {
     };
   }, [jobs]);
 
-  async function handleSaveMailbox(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSaving(true);
+  async function handleConnectGmail() {
+    setIsConnecting(true);
     setError(null);
     setSuccess(null);
-
     try {
-      await upsertGmailConnection({
-        account_email: form.account_email,
-        display_name: form.display_name || undefined,
-        google_account_id: form.google_account_id || undefined,
-        encrypted_refresh_token: form.encrypted_refresh_token,
-        access_scope: form.access_scope,
-        status: form.status,
-      });
-      setSuccess('Đã lưu mailbox vào backend.');
-      await loadPage();
-    } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Không lưu được mailbox.');
+      const redirectTo = `${window.location.origin}/setup`;
+      const response = await startGmailOAuth(redirectTo);
+      window.location.href = response.authorization_url;
+    } catch (connectError) {
+      setError(connectError instanceof Error ? connectError.message : 'Không khởi tạo được kết nối Gmail.');
     } finally {
-      setIsSaving(false);
+      setIsConnecting(false);
     }
   }
 
@@ -147,10 +141,11 @@ export function Setup() {
         query,
         max_results: maxResults,
       });
-      setSuccess(`Đã tạo lần đồng bộ ${job.id}.`);
+      const executedJob = await runSyncJob(job.id);
+      setSuccess(`Đã chạy đồng bộ ${executedJob.id}.`);
       await loadPage(selectedConnectionId);
     } catch (createError) {
-      setError(createError instanceof Error ? createError.message : 'Không tạo được lần đồng bộ.');
+      setError(createError instanceof Error ? createError.message : 'Không chạy được lần đồng bộ.');
     } finally {
       setIsCreatingJob(false);
     }
@@ -201,38 +196,22 @@ export function Setup() {
             <div className="rounded-[28px] border border-slate-200 bg-white p-6">
               <div className="flex items-center gap-2">
                 <Mail className="h-5 w-5 text-slate-500" />
-                <h2 className="text-xl font-semibold text-slate-900">Kết nối hộp thư</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Kết nối Gmail</h2>
               </div>
-              <form className="mt-5 space-y-4" onSubmit={handleSaveMailbox}>
-                <div>
-                  <label className="mb-2 block text-sm text-slate-600">Email Gmail</label>
-                  <input
-                    required
-                    value={form.account_email}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, account_email: event.target.value }))
-                    }
-                    className="h-12 w-full rounded-2xl border border-slate-200 bg-[#fcfbf8] px-4 text-slate-900 outline-none focus:border-slate-900"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm text-slate-600">Tên hiển thị</label>
-                  <input
-                    value={form.display_name}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, display_name: event.target.value }))
-                    }
-                    className="h-12 w-full rounded-2xl border border-slate-200 bg-[#fcfbf8] px-4 text-slate-900 outline-none focus:border-slate-900"
-                  />
-                </div>
+              <div className="mt-5 space-y-4">
+                <p className="text-sm leading-7 text-slate-600">
+                  Hộp thư Gmail bây giờ được kết nối bằng OAuth thật. Backend sẽ lưu refresh token
+                  và dùng nó để chạy sync job thay vì form demo nhập tay như trước.
+                </p>
                 <button
-                  type="submit"
-                  disabled={isSaving}
+                  type="button"
+                  onClick={handleConnectGmail}
+                  disabled={isConnecting}
                   className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-60"
                 >
-                  {isSaving ? 'Đang lưu...' : 'Lưu hộp thư'}
+                  {isConnecting ? 'Đang chuyển hướng...' : 'Kết nối Gmail với Google'}
                 </button>
-              </form>
+              </div>
 
               <div className="mt-6 space-y-3">
                 {connections.map((connection) => (
@@ -303,7 +282,7 @@ export function Setup() {
                   disabled={isCreatingJob}
                   className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-[#c96d42] px-5 text-sm font-medium text-white transition hover:bg-[#b55f39] disabled:opacity-60"
                 >
-                  {isCreatingJob ? 'Đang tạo...' : 'Tạo lần đồng bộ'}
+                  {isCreatingJob ? 'Đang chạy...' : 'Tạo và chạy đồng bộ'}
                 </button>
               </form>
 

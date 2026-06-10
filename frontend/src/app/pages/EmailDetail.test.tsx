@@ -12,7 +12,7 @@ import { getEmail } from '../lib/agentify-api';
 
 describe('EmailDetail', () => {
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   it('renders explained Vietnamese labels for extracted logistics facts', async () => {
@@ -67,5 +67,45 @@ describe('EmailDetail', () => {
     expect(screen.getAllByText('Thông báo hàng đến').length).toBeGreaterThan(0);
     expect(screen.getByText('Đã trích xuất chữ')).toBeInTheDocument();
     expect(screen.getByText('Nguồn trích xuất: arrival_notice.pdf')).toBeInTheDocument();
+  });
+
+  it('shows unavailable preview state when attachment has no file_url', async () => {
+    vi.mocked(getEmail).mockResolvedValue({
+      email: {
+        id: 'email-1',
+        subject: 'Vessel update - TEMU5522441',
+        from_email: 'ops@carrier.com',
+        to_emails: ['cs@agentify.vn'],
+        sent_at: '2026-06-08T04:35:00Z',
+        snippet: 'Attachment metadata only.',
+        body_text: 'Please check extracted data.',
+      },
+      attachments: [
+        {
+          id: 'att-1',
+          filename: 'vessel_update_temu5522441.pdf',
+          mime_type: 'application/pdf',
+          text_extract_status: 'extracted',
+          document_type: 'other',
+          file_url: null,
+        },
+      ],
+      extracted_facts: [],
+      linked_containers: ['TEMU5522441'],
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/emails/email-1']}>
+        <Routes>
+          <Route path="/emails/:id" element={<EmailDetail />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('Xem trước PDF')).toBeInTheDocument();
+    expect(
+      screen.getByText('Tệp PDF này hiện không có file khả dụng để xem trước.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByTitle('PDF preview')).not.toBeInTheDocument();
   });
 });
