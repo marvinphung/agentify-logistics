@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -122,6 +123,7 @@ class IngestAttachmentRequest(BaseModel):
     text_extract_status: str = "extracted"
     extracted_text: str | None = None
     document_type: str | None = None
+    extracted_record: dict[str, Any] | None = None
 
 
 class IngestFactRequest(BaseModel):

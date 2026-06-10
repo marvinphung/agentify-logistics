@@ -20,6 +20,75 @@ def list_new_messages(
     return [message["id"] for message in response.get("messages", [])]
 
 
+def resolve_sync_message_ids(
+    service: Any,
+    query: str | None = None,
+    max_results: int = 100,
+    sync_cursor: str | None = None,
+) -> tuple[list[str], str | None]:
+    if sync_cursor:
+        try:
+            message_ids = list_changed_messages(
+                service,
+                start_history_id=sync_cursor,
+                max_results=max_results,
+            )
+            return message_ids, get_latest_history_id(service)
+        except Exception as exc:
+            if not _is_invalid_history_cursor_error(exc):
+                raise
+
+    message_ids = list_new_messages(service, query=query, max_results=max_results)
+    return message_ids, get_latest_history_id(service)
+
+
+def list_changed_messages(
+    service: Any,
+    start_history_id: str,
+    max_results: int = 100,
+) -> list[str]:
+    message_ids: list[str] = []
+    seen: set[str] = set()
+    page_token: str | None = None
+
+    while len(message_ids) < max_results:
+        request = (
+            service.users()
+            .history()
+            .list(
+                userId="me",
+                startHistoryId=start_history_id,
+                historyTypes=["messageAdded"],
+                pageToken=page_token,
+            )
+        )
+        response = request.execute()
+        for history_entry in response.get("history", []):
+            for message_added in history_entry.get("messagesAdded", []):
+                message = message_added.get("message", {})
+                message_id = message.get("id")
+                if not message_id or message_id in seen:
+                    continue
+                seen.add(message_id)
+                message_ids.append(message_id)
+                if len(message_ids) >= max_results:
+                    break
+            if len(message_ids) >= max_results:
+                break
+
+        page_token = response.get("nextPageToken")
+        if not page_token:
+            break
+
+    return message_ids
+
+
+def get_latest_history_id(service: Any) -> str | None:
+    profile = service.users().getProfile(userId="me").execute()
+    history_id = profile.get("historyId")
+    return str(history_id) if history_id is not None else None
+
+
 def get_email(service: Any, msg_id: str) -> GmailEmailPayload:
     message = (
         service.users().messages().get(userId="me", id=msg_id, format="full").execute()
@@ -125,3 +194,11 @@ def _normalize_datetime(value: str | None) -> datetime:
         return parsedate_to_datetime(value).astimezone(UTC)
     except (TypeError, ValueError, IndexError):
         return datetime.now(UTC)
+
+
+def _is_invalid_history_cursor_error(exc: Exception) -> bool:
+    status_code = getattr(getattr(exc, "resp", None), "status", None)
+    if status_code == 404:
+        return True
+    message = str(exc)
+    return "startHistoryId" in message or "historyId" in message

@@ -4,14 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.models import EmailDetailResponse, EmailListItem, EmailListResponse
+from api.routes.attachments import attachment_file_url
 from db.database import get_db
 from services.container_service import get_email_detail, list_emails
 
 router = APIRouter(prefix="/api/v1/emails", tags=["emails"])
-
-
-def _attachment_file_url(attachment_id) -> str:
-    return f"/api/v1/attachments/{attachment_id}/file"
 
 
 @router.get("", response_model=EmailListResponse)
@@ -85,7 +82,8 @@ async def get_email_detail_endpoint(
                 "size_bytes": attachment.size_bytes,
                 "text_extract_status": attachment.text_extract_status,
                 "document_type": attachment.document_type,
-                "file_url": _attachment_file_url(attachment.id),
+                "extracted_record": attachment.extracted_record,
+                "file_url": attachment_file_url(attachment),
             }
             for attachment in detail["attachments"]
         ],

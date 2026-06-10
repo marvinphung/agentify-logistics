@@ -28,6 +28,17 @@ The backend intentionally follows the same operational style as
 4. Run migration with `./.venv/bin/alembic upgrade head`.
 5. Start API with `./.venv/bin/uvicorn api.routes.api_main:app --reload --port 8766`.
 
+## Reset DB Manually
+
+- Recreate the current schema from `db/models.py` with `./.venv/bin/python scripts/reset_database.py`.
+- The API does not auto-run `init_db()` on startup, so Docker/app boot will not reset schema automatically.
+
+## Attachment Storage
+
+- Gmail PDF attachments are persisted under `backend/storage/gmail_attachments/`.
+- `docker-compose.yml` mounts `/app/storage` to the named volume `agentify-logistics-storage` so synced PDFs survive container rebuilds and can be previewed later.
+- If you change the storage strategy, keep attachment paths under the backend root because `/api/v1/attachments/{id}/file` only serves files from that safe subtree.
+
 ## Gmail OAuth Config
 
 The embedded Gmail module expects these env vars:

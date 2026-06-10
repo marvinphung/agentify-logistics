@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { render, screen, waitFor } from '@testing-library/react';
+import { createMemoryRouter, MemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Setup } from './Setup';
@@ -82,5 +82,48 @@ describe('Setup', () => {
     expect(screen.getAllByText('demo-logistics@agentify.vn').length).toBeGreaterThan(0);
     expect(screen.getByText('Đã kết nối')).toBeInTheDocument();
     expect(screen.getByText('Hoạt động tốt')).toBeInTheDocument();
+  });
+
+  it('consumes oauth error query params after showing the message', async () => {
+    vi.mocked(getAppHome).mockResolvedValue({
+      has_data: false,
+      container_count: 0,
+      last_sync_at: null,
+      connected_mailboxes: [],
+      recent_containers: [],
+    });
+    vi.mocked(getHealth).mockResolvedValue({ status: 'ok', database: 'ok' });
+    vi.mocked(listGmailConnections).mockResolvedValue([]);
+    vi.mocked(listSyncJobs).mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      page_size: 10,
+    });
+    vi.mocked(listEmails).mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      page_size: 12,
+    });
+
+    const router = createMemoryRouter(
+      [{ path: '/setup', element: <Setup /> }],
+      {
+        initialEntries: [
+          '/setup?gmail_oauth=error&message=Multiple%20exceptions%3A%20Connect%20call%20failed',
+        ],
+      },
+    );
+
+    render(<RouterProvider router={router} />);
+
+    expect(
+      await screen.findByText('Multiple exceptions: Connect call failed'),
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(router.state.location.search).toBe('');
+    });
   });
 });

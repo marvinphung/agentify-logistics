@@ -1,5 +1,8 @@
 import unittest
 from datetime import UTC, datetime
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 from uuid import uuid4
 
 from api.models import ProcessedEmailIngestRequest
@@ -71,19 +74,29 @@ class GmailAdapterTest(unittest.TestCase):
             extraction_status="ok",
         )
 
-        payload = build_processed_email_request(
-            gmail_connection_id=gmail_connection_id,
-            sync_job_id=sync_job_id,
-            email=email,
-            attachment_results=[
-                AttachmentExtractionResult(
-                    attachment=email.attachments[0],
-                    extracted_text="Container No: MSCU1234567",
-                    text_extract_status="extracted",
-                    record=record,
+        backend_root = Path("backend").resolve()
+        storage_root = backend_root / "storage"
+        storage_root.mkdir(parents=True, exist_ok=True)
+        with TemporaryDirectory(dir=storage_root) as temp_dir:
+            with patch("gmail_service.adapter.ATTACHMENT_STORAGE_DIR", Path(temp_dir)):
+                payload = build_processed_email_request(
+                    gmail_connection_id=gmail_connection_id,
+                    sync_job_id=sync_job_id,
+                    email=email,
+                    attachment_results=[
+                        AttachmentExtractionResult(
+                            attachment=email.attachments[0],
+                            extracted_text="Container No: MSCU1234567",
+                            text_extract_status="extracted",
+                            record=record,
+                        )
+                    ],
                 )
-            ],
-        )
+
+                self.assertIsNotNone(payload.attachments[0].storage_path)
+                stored_path = backend_root / payload.attachments[0].storage_path
+                self.assertTrue(stored_path.is_file())
+                self.assertEqual(stored_path.read_bytes(), b"%PDF")
 
         self.assertIsInstance(payload, ProcessedEmailIngestRequest)
         self.assertEqual(payload.gmail_connection_id, gmail_connection_id)
@@ -93,6 +106,14 @@ class GmailAdapterTest(unittest.TestCase):
         self.assertEqual(len(payload.attachments), 1)
         self.assertEqual(payload.attachments[0].document_type, "arrival_notice")
         self.assertEqual(payload.attachments[0].extracted_text, "Container No: MSCU1234567")
+        self.assertEqual(
+            payload.attachments[0].extracted_record["identifiers"]["container_no"],
+            ["MSCU1234567"],
+        )
+        self.assertEqual(
+            payload.attachments[0].extracted_record["route"]["pod"],
+            "Hai Phong",
+        )
 
         facts = {
             (fact.field_name, fact.normalized_value, fact.container_no)
@@ -103,6 +124,116 @@ class GmailAdapterTest(unittest.TestCase):
         self.assertIn(("bl_no", "BL-001", "MSCU1234567"), facts)
         self.assertIn(("eta", "2026-06-12", "MSCU1234567"), facts)
         self.assertIn(("status_text", "arrival_notice", "MSCU1234567"), facts)
+
+    def test_build_processed_email_request_extracts_facts_from_email_body_without_pdf(
+        self,
+    ) -> None:
+        gmail_connection_id = uuid4()
+        sync_job_id = uuid4()
+        sent_at = datetime(2026, 6, 10, 9, 12, tzinfo=UTC)
+        email = GmailEmailPayload(
+            gmail_message_id="msg-002",
+            gmail_thread_id="thread-002",
+            subject="Delivered - container MSCU7812456 completed on 2026-06-20",
+            from_email="ops@carrier.com",
+            to_emails=["cs@agentify.vn"],
+            sent_at=sent_at,
+            snippet=(
+                "Container no: MSCU7812456 Booking no: BKGMYC8821 "
+                "B/L no: MAEU260619771"
+            ),
+            body_text=(
+                "Dear team,\n\n"
+                "Final delivery has been completed.\n\n"
+                "Container no: MSCU7812456\n"
+                "Booking no: BKGMYC8821\n"
+                "B/L no: MAEU260619771\n"
+                "Delivery date: 2026-06-20\n"
+                "Delivery point: Shah Alam DC\n"
+                "Receiver: Metro Fashion Malaysia\n"
+            ),
+            raw_labels=["INBOX"],
+        )
+
+        payload = build_processed_email_request(
+            gmail_connection_id=gmail_connection_id,
+            sync_job_id=sync_job_id,
+            email=email,
+            attachment_results=[],
+        )
+
+        self.assertFalse(payload.has_pdf_attachments)
+        facts = {
+            (fact.field_name, fact.normalized_value, fact.container_no, fact.source_type)
+            for fact in payload.extracted_facts
+        }
+        self.assertIn(
+            ("container_no", "MSCU7812456", "MSCU7812456", "email_body"),
+            facts,
+        )
+        self.assertIn(
+            ("booking_no", "BKGMYC8821", "MSCU7812456", "email_body"),
+            facts,
+        )
+        self.assertIn(
+            ("bl_no", "MAEU260619771", "MSCU7812456", "email_body"),
+            facts,
+        )
+        self.assertIn(
+            ("eta", "2026-06-20", "MSCU7812456", "email_body"),
+            facts,
+        )
+
+    def test_build_processed_email_request_uses_body_text_without_subject_identifiers(
+        self,
+    ) -> None:
+        gmail_connection_id = uuid4()
+        sync_job_id = uuid4()
+        sent_at = datetime(2026, 6, 10, 9, 12, tzinfo=UTC)
+        email = GmailEmailPayload(
+            gmail_message_id="msg-003",
+            gmail_thread_id="thread-003",
+            subject="Delivery update",
+            from_email="ops@carrier.com",
+            to_emails=["cs@agentify.vn"],
+            sent_at=sent_at,
+            snippet="Final delivery completed.",
+            body_text=(
+                "Container no: TCKU1234567\n"
+                "Booking number: HLCSG112233\n"
+                "Bill of lading number: OOLU99887766\n"
+                "ETA: 2026-06-21\n"
+            ),
+            raw_labels=["INBOX"],
+        )
+
+        payload = build_processed_email_request(
+            gmail_connection_id=gmail_connection_id,
+            sync_job_id=sync_job_id,
+            email=email,
+            attachment_results=[],
+        )
+
+        facts = {
+            (fact.field_name, fact.normalized_value, fact.container_no, fact.source_type)
+            for fact in payload.extracted_facts
+        }
+        self.assertIn(
+            ("container_no", "TCKU1234567", "TCKU1234567", "email_body"),
+            facts,
+        )
+        self.assertIn(
+            ("booking_no", "HLCSG112233", "TCKU1234567", "email_body"),
+            facts,
+        )
+        self.assertIn(
+            ("bl_no", "OOLU99887766", "TCKU1234567", "email_body"),
+            facts,
+        )
+        self.assertIn(
+            ("eta", "2026-06-21", "TCKU1234567", "email_body"),
+            facts,
+        )
 
 
 if __name__ == "__main__":

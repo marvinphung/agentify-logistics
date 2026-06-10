@@ -23,6 +23,7 @@ async def create_sync_job(db: AsyncSession, payload: CreateSyncJobRequest) -> Sy
     )
     db.add(job)
     await db.flush()
+    await db.refresh(job)
     return job
 
 
@@ -42,6 +43,7 @@ async def update_sync_job(
         job.completed_at = payload.completed_at or datetime.utcnow()
 
     await db.flush()
+    await db.refresh(job)
     return job
 
 

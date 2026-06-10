@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import create_engine, pool
@@ -7,7 +8,21 @@ from config.settings import postgres_config
 from db.models import Base
 
 config = context.config
-config.set_main_option("sqlalchemy.url", postgres_config.SYNC_URL)
+
+
+def _get_sync_url() -> str:
+    runtime_url = os.getenv("DATABASE_URL")
+    if runtime_url:
+        if "+asyncpg" in runtime_url:
+            return runtime_url.replace("+asyncpg", "+psycopg")
+        if "+psycopg" in runtime_url:
+            return runtime_url
+        return runtime_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return postgres_config.SYNC_URL
+
+
+SYNC_URL = _get_sync_url()
+config.set_main_option("sqlalchemy.url", SYNC_URL)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
@@ -30,7 +45,7 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     connectable = create_engine(
-        postgres_config.SYNC_URL,
+        SYNC_URL,
         poolclass=pool.NullPool,
     )
 

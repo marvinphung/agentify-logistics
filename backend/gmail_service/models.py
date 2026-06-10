@@ -96,6 +96,7 @@ class ExtractedRecord(BaseModel):
     cargo: Cargo | None = None
     charges: list[Charge] = Field(default_factory=list)
     extraction_status: Literal["ok", "partial", "failed"] = "ok"
+    extraction_error: str | None = None
 
 
 class GmailAttachmentPayload(BaseModel):

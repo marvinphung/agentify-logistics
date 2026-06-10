@@ -70,6 +70,7 @@ export function EmailDetail() {
   const selectedAttachmentUrl = selectedAttachment?.file_url
     ? buildApiUrl(selectedAttachment.file_url)
     : null;
+  const hasSelectedAttachment = selectedAttachment !== null;
 
   return (
     <div className="min-h-[100dvh] bg-[#f7f7f1] p-5 sm:p-6 lg:p-8">
@@ -207,6 +208,10 @@ export function EmailDetail() {
                     src={selectedAttachmentUrl}
                     className="h-[720px] w-full bg-white"
                   />
+                </div>
+              ) : hasSelectedAttachment ? (
+                <div className="mt-5 rounded-[22px] border border-dashed border-amber-300 bg-amber-50/70 p-4 text-sm text-amber-900">
+                  Tệp PDF này hiện không có file khả dụng để xem trước.
                 </div>
               ) : (
                 <div className="mt-5 rounded-[22px] border border-dashed border-slate-300 p-4 text-sm text-slate-500">

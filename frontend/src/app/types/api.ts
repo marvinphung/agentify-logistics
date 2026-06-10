@@ -158,6 +158,7 @@ export interface EmailAttachment {
   size_bytes: number | null;
   text_extract_status: string;
   document_type: string | null;
+  extracted_record: Record<string, unknown> | null;
   file_url: string | null;
 }
 

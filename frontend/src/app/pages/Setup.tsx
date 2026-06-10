@@ -27,7 +27,7 @@ import type {
 } from '../types/api';
 
 export function Setup() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [home, setHome] = useState<AppHomeResponse | null>(null);
   const [connections, setConnections] = useState<GmailConnection[]>([]);
@@ -91,7 +91,15 @@ export function Setup() {
     } else if (oauthStatus === 'error') {
       setError(message || 'Kết nối Gmail không thành công.');
     }
-  }, [searchParams]);
+    if (!oauthStatus) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('gmail_oauth');
+    nextParams.delete('message');
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const stats = useMemo(() => {
     const latestJob = jobs[0];
